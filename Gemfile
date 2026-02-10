@@ -52,6 +52,7 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
   gem 'rubocop', require: false
   gem 'rubocop-rails', require: false
+  gem 'faker'
 end
 
 group :development do
