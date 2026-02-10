@@ -1,0 +1,25 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  # This tells Rails to look for the "DATABASE_USER" variable from your Docker command
+  # If it doesn't find one, it defaults to "test_app"
+  username: <%= ENV.fetch("DATABASE_USER") { "test_app" } %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD") { "test_password" } %>
+  host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+
+development:
+  <<: *default
+  database: dozen_attendance_development
+
+test:
+  <<: *default
+  database: dozen_attendance_test
+
+# --- HEROKU CONFIGURATION ---
+# Heroku ignores the username/password fields above and looks strictly
+# for the "DATABASE_URL" environment variable, which it provides automatically.
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
+  adapter: postgresql
