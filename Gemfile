@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem 'concurrent-ruby', '1.3.4'
+gem "concurrent-ruby", "1.3.4"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.0.3"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
@@ -52,6 +52,7 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
   gem 'rubocop', require: false
   gem 'rubocop-rails', require: false
+  gem 'faker'
 end
 
 group :development do
