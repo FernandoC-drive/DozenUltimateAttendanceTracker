@@ -1,0 +1,13 @@
+Inspecting 23 files
+C......................
+
+Offenses:
+
+Gemfile:3:5: C: [Correctable] Style/StringLiterals: Prefer double-quoted strings unless you need single quotes to avoid extra backslashes for escaping.
+gem 'concurrent-ruby', '1.3.4'
+    ^^^^^^^^^^^^^^^^^
+Gemfile:3:24: C: [Correctable] Style/StringLiterals: Prefer double-quoted strings unless you need single quotes to avoid extra backslashes for escaping.
+gem 'concurrent-ruby', '1.3.4'
+                       ^^^^^^^
+
+23 files inspected, 2 offenses detected, 2 offenses autocorrectable
