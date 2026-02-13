@@ -1,23 +1,70 @@
-## 🚀 How to Run the App (Team Setup)
+# Team Attendance App
 
-Follow these steps after you `git pull` the latest code to ensure your database and gems are up to date.
+## Local testing with Docker (recommended)
 
-### 1. Start the Docker Container
-Make sure you are in the project directory, then run the standard container command:
+Run these commands from the project root in PowerShell.
 
-docker run -it --volume "$(PWD):/csce431" -e DATABASE_USER=test_app -e DATABASE_PASSWORD=test_password -p 3000:3000 paulinewade/csce431:sp26v1
+1. Create a Docker network (one time):
 
+```powershell
+docker network create attendance-net
+```
 
-### 2. Install New Gems
-Update your bundle inside the container:
+2. Start PostgreSQL:
 
-bundle install
+```powershell
+docker run -d --name attendance-db --network attendance-net `
+  -e POSTGRES_USER=postgres `
+  -e POSTGRES_PASSWORD=postgres `
+  -e POSTGRES_DB=d_uattendandance_development `
+  -p 5432:5432 postgres:16
+```
 
-### 3. Setup the Database
-If this is your first time running this specific project, or if you want to reset your data to the clean "seed" state, run the setup command. It automatically creates the DB, migrates the schema, and populates it with 20 fake members.
+3. Start Rails app:
 
-bin/rails db:setup
+```powershell
+docker run --rm -it --network attendance-net `
+  -p 3000:3000 `
+  -e DATABASE_URL=postgres://postgres:postgres@attendance-db:5432/d_uattendandance_development `
+  -v ${PWD}:/app `
+  --entrypoint /bin/bash paulinewade/csce431:sp26v1 `
+  -lc "cd /app && sed -i 's/\r$//' bin/* && bundle install && bundle exec rails db:prepare db:seed && bundle exec rails server -b 0.0.0.0 -p 3000"
+```
 
-### 4. Start the Server
+4. Open the app:
 
-bin/rails s -b 0.0.0.0
+`http://localhost:3000`
+
+## Test accounts
+
+- Coach: `coach@example.com` / `password`
+- Player: `player@example.com` / `password`
+
+## Manual acceptance checks
+
+1. Sign in as coach.
+2. Go to `Admin Attendance`, create/update attendance.
+3. Confirm success flash: `Attendance updated successfully.`
+4. Enter `-1` or `abc` for hours and confirm: `Invalid attendance hours.`
+5. Sign out and sign in as player.
+6. Confirm updated hours appear on player attendance page.
+
+## Run automated tests
+
+In a new terminal while Rails container is running:
+
+```powershell
+docker run --rm -it --network attendance-net `
+  -e DATABASE_URL=postgres://postgres:postgres@attendance-db:5432/d_uattendandance_development `
+  -v ${PWD}:/app `
+  --entrypoint /bin/bash paulinewade/csce431:sp26v1 `
+  -lc "cd /app && sed -i 's/\r$//' bin/* && bundle install && bundle exec rails test"
+```
+
+## Cleanup
+
+```powershell
+docker stop attendance-db
+docker rm attendance-db
+docker network rm attendance-net
+```
