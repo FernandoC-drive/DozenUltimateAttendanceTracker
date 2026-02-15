@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Weekly workouts" %>
+
+<h1>Weekly workouts</h1>
+
+<div id="weekly_workouts">
+  <% @weekly_workouts.each do |weekly_workout| %>
+    <%= render weekly_workout %>
+    <p>
+      <%= link_to "Show this weekly workout", weekly_workout %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New weekly workout", new_weekly_workout_path %>
