@@ -1,0 +1,53 @@
+<% content_for :title, "Admin Attendance" %>
+
+<section class="card">
+  <h2>Coach Attendance Overrides</h2>
+
+  <%= form_with url: admin_attendances_path, method: :get, local: true, class: "toolbar" do |f| %>
+    <%= f.label :date, "Month" %>
+    <%= f.date_field :date, value: @selected_date %>
+    <%= f.submit "Load" %>
+  <% end %>
+
+  <h3>Add or override attendance</h3>
+  <%= form_with model: [:admin, @attendance], url: admin_attendances_path, method: :post, class: "toolbar" do |f| %>
+    <%= f.collection_select :player_id, @players, :id, :name, prompt: "Select player" %>
+    <%= f.date_field :date, value: @selected_date %>
+    <%= f.text_field :hours, placeholder: "Hours" %>
+    <label><%= f.check_box :attended %> Attended</label>
+    <%= f.text_field :notes, placeholder: "Notes" %>
+    <%= f.submit "Save" %>
+  <% end %>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th>Date</th>
+        <th>Hours</th>
+        <th>Attended</th>
+        <th>Source</th>
+        <th>Override</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @attendances.each do |attendance| %>
+        <tr>
+          <td><%= attendance.player.name %></td>
+          <td><%= attendance.date %></td>
+          <td><%= attendance.hours %></td>
+          <td><%= attendance.attended ? "Yes" : "No" %></td>
+          <td><%= attendance.source %></td>
+          <td>
+            <%= form_with model: [:admin, attendance], method: :patch, class: "toolbar" do |f| %>
+              <%= f.text_field :hours, value: attendance.hours, size: 6 %>
+              <label><%= f.check_box :attended, checked: attendance.attended %> Present</label>
+              <%= f.text_field :notes, value: attendance.notes, placeholder: "Notes" %>
+              <%= f.submit "Update" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
