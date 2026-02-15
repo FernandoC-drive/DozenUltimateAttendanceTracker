@@ -1,0 +1,49 @@
+<% content_for :title, "RecSports Settings" %>
+
+<section class="card">
+  <h2>RecSports Access</h2>
+
+  <%= form_with model: @credential, url: admin_recsports_path, method: :patch do |f| %>
+    <div class="field">
+      <%= f.label :access_mode %>
+      <%= f.select :access_mode, RecsportsCredential.access_modes.keys.map { |k| [k.humanize, k] } %>
+    </div>
+
+    <div class="field">
+      <%= f.label :form_url, "Form/API URL" %>
+      <%= f.url_field :form_url %>
+    </div>
+
+    <div class="field">
+      <%= f.label :username %>
+      <%= f.text_field :username %>
+    </div>
+
+    <div class="field">
+      <%= f.label :password %>
+      <%= f.password_field :password, value: @credential.password %>
+    </div>
+
+    <div class="field checkbox">
+      <%= f.check_box :active %>
+      <%= f.label :active, "Enabled" %>
+    </div>
+
+    <%= f.submit "Save settings" %>
+  <% end %>
+
+  <div class="toolbar">
+    <%= button_to "Test access", test_access_admin_recsports_path, method: :post %>
+  </div>
+
+  <%= form_with url: sync_now_admin_recsports_path, method: :post do |f| %>
+    <div class="field">
+      <%= f.label :manual_payload, "Manual payload (JSON array, used in manual_upload mode)" %>
+      <%= f.text_area :manual_payload, rows: 8 %>
+    </div>
+    <%= f.submit "Sync now" %>
+  <% end %>
+
+  <p><strong>Last checked:</strong> <%= @credential.last_checked_at || "Never" %></p>
+  <p><strong>Last error:</strong> <%= @credential.last_error.presence || "None" %></p>
+</section>

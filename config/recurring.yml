@@ -1,0 +1,3 @@
+recsports_sync:
+  class: RecsportsSyncJob
+  schedule: every 30 minutes

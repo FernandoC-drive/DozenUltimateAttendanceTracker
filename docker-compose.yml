@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16
+    container_name: attendance-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: d_uattendandance_development
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    image: paulinewade/csce431:sp26v1
+    container_name: attendance-web
+    working_dir: /app
+    entrypoint:
+      - /bin/bash
+      - -lc
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/d_uattendandance_development
+      RAILS_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+    command: "bundle install && bundle exec rails db:prepare && exec bundle exec rails server -b 0.0.0.0 -p 3000"
+
+volumes:
+  pgdata:

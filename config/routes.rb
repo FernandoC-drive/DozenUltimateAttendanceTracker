@@ -1,13 +1,17 @@
 Rails.application.routes.draw do
-  # --- 1. The Home Page ---
-  root 'members#index'
 
-  # --- 2. Resources ---
-  # These allow you to Create, Read, Update, and Delete data
-  resources :members
-  resources :attendance_records
-  resources :weekly_workouts
+  resource :session, only: %i[new create destroy]
 
-  # --- Health Check (Standard in Rails 8) ---
-  get "up" => "rails/health#show", as: :rails_health_check
+  namespace :admin do
+    resources :attendances, only: %i[index create update]
+    resource :recsports, only: %i[show update] do
+      post :test_access
+      post :sync_now
+    end
+  end
+
+  resources :attendances, only: :index
+  resources :workout_checkins, only: :create
+
+  root "attendances#index"
 end
