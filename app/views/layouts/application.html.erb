@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "D Uattendandance" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <h1>Team Attendance Dashboard</h1>
+      <% if current_user %>
+        <nav>
+          <%= link_to "Attendance", attendances_path %>
+          <% if current_user.coach? %>
+            <%= link_to "Admin Attendance", admin_attendances_path %>
+            <%= link_to "RecSports", admin_recsports_path %>
+          <% end %>
+          <%= button_to "Sign out", session_path, method: :delete, class: "link-button" %>
+        </nav>
+      <% end %>
+    </header>
+
+    <% flash.each do |key, value| %>
+      <p class="flash <%= key %>"><%= value %></p>
+    <% end %>
+
+    <main class="page-content">
+      <%= yield %>
+    </main>
+  </body>
+</html>

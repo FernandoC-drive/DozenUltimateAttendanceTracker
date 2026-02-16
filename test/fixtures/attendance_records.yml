@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  member: one
+  date: 2026-02-10
+  is_present: false
+
+two:
+  member: two
+  date: 2026-02-10
+  is_present: false

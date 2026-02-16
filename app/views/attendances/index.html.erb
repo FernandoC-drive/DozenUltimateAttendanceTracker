@@ -1,0 +1,59 @@
+<% content_for :title, "Attendance" %>
+
+<section class="card">
+  <h2>Attendance</h2>
+
+  <%= form_with url: attendances_path, method: :get, local: true, class: "toolbar" do |f| %>
+    <%= f.label :date, "Date" %>
+    <%= f.date_field :date, value: @selected_date %>
+    <%= f.select :view, [["Daily", "daily"], ["Weekly", "weekly"], ["Monthly", "monthly"]], selected: @view_mode %>
+    <%= f.submit "Apply" %>
+  <% end %>
+
+  <table>
+    <thead>
+      <tr>
+        <% if current_user.coach? %><th>Player</th><% end %>
+        <th>Date</th>
+        <th>Hours</th>
+        <th>Attended</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @attendances.each do |attendance| %>
+        <tr class="heat-<%= attendance.heat_level %>">
+          <% if current_user.coach? %><td><%= attendance.player.name %></td><% end %>
+          <td><%= attendance.date %></td>
+          <td><%= attendance.hours %></td>
+          <td><%= attendance.attended ? "Yes" : "No" %></td>
+          <td><%= attendance.source %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
+
+<% unless current_user.coach? %>
+  <section class="card">
+    <h2>Workout Check-in</h2>
+    <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path do |f| %>
+      <div class="field">
+        <%= f.label :workout_date %>
+        <%= f.date_field :workout_date, required: true %>
+      </div>
+      <div class="field">
+        <%= f.label :proof_url, "Proof image URL" %>
+        <%= f.url_field :proof_url %>
+      </div>
+      <%= f.submit "Save workout" %>
+    <% end %>
+
+    <h3>This month</h3>
+    <ul>
+      <% @workout_checkins.each do |checkin| %>
+        <li><%= checkin.workout_date %> <% if checkin.proof_url.present? %>- <%= link_to "proof", checkin.proof_url, target: "_blank", rel: "noreferrer" %><% end %></li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

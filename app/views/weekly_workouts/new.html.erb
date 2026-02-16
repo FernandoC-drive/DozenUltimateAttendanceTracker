@@ -1,0 +1,11 @@
+<% content_for :title, "New weekly workout" %>
+
+<h1>New weekly workout</h1>
+
+<%= render "form", weekly_workout: @weekly_workout %>
+
+<br>
+
+<div>
+  <%= link_to "Back to weekly workouts", weekly_workouts_path %>
+</div>
