@@ -23,7 +23,7 @@
     <tbody>
       <% @attendances.each do |attendance| %>
         <tr class="heat-<%= attendance.heat_level %>">
-          <% if current_user.coach? %><td><%= attendance.player.name %></td><% end %>
+          <td><%= attendance.player.name %></td>
           <td><%= attendance.date %></td>
           <td><%= attendance.hours %></td>
           <td><%= attendance.attended ? "Yes" : "No" %></td>
