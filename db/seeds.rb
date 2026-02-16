@@ -11,7 +11,6 @@ coach = User.find_or_create_by!(email: "coach@example.com") do |u|
   u.password = "password"
 end
 
-
 player = User.find_or_create_by!(email: "player@example.com") do |u|
   u.name = "Default Player"
   u.coach = false
@@ -27,9 +26,9 @@ puts "Generating 10 random players with history..."
     coach: false
   )
   
-  unique_dates = (0..30).to_a.sample(5).map { |d| d.days.ago.to_date }
+  unique_attendance_dates = (0..30).to_a.sample(5).map { |d| d.days.ago.to_date }
 
-  unique_dates.each do |rand_date|
+  unique_attendance_dates.each do |rand_date|
     Attendance.create!(
       player_id: new_player.id,
       date: rand_date,
@@ -39,16 +38,18 @@ puts "Generating 10 random players with history..."
     )
   end
   
-  rand(1..3).times do
+  unique_workout_offsets = (0..30).to_a.sample(rand(1..3))
+  unique_workout_dates = unique_workout_offsets.map { |d| d.days.ago.to_date }
+
+  unique_workout_dates.each do |rand_workout_date|
     WorkoutCheckin.create!(
       player_id: new_player.id,
-      workout_date: Faker::Date.backward(days: 30),
+      workout_date: rand_workout_date,
       proof_url: "https://example.com/fake_proof_#{rand(100..999)}.jpg",
       source: 0
     )
   end
 end
-
 
 RecsportsCredential.find_or_create_by!(form_url: "https://example.com/recsports_attendance.json") do |c|
   c.access_mode = 0
