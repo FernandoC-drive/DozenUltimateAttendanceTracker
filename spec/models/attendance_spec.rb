@@ -4,6 +4,13 @@ RSpec.describe Attendance, type: :model do
   let(:player) { User.create!(name: "Test Player", email: "test@tamu.edu", password: "password") }
 
   describe "validations" do
+
+    it "is invalid if hours cannot be parsed as a number" do
+      attendance = Attendance.new(player: player, date: Date.current, hours: "not-a-number")
+      attendance.valid?
+      expect(attendance.errors[:hours]).to include(Attendance::INVALID_HOURS_MESSAGE)
+    end
+    
     it "is valid with a date and player" do
       attendance = Attendance.new(player: player, date: Date.current, hours: 1.5)
       expect(attendance).to be_valid
@@ -42,4 +49,18 @@ RSpec.describe Attendance, type: :model do
       expect(attendance.heat_level).to eq(3)
     end
   end
+
+  describe "scopes" do
+    let(:player) { User.create!(name: "Test", email: "test@tamu.edu", password: "password") }
+    
+    it "filters by day, week, and month" do
+      today = Date.current
+      attendance = Attendance.create!(player: player, date: today, hours: 2)
+      
+      expect(Attendance.for_day(today)).to include(attendance)
+      expect(Attendance.for_week(today)).to include(attendance)
+      expect(Attendance.for_month(today)).to include(attendance)
+    end
+  end
+
 end

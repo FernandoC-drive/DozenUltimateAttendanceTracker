@@ -3,11 +3,26 @@ SimpleCov.start 'rails' do
   add_filter '/bin/'
   add_filter '/db/'
   add_filter '/spec/'
+  add_filter '/config/'
   
+  # Rails Boilerplate
+  add_filter 'app/mailers/'
+  add_filter 'app/channels/'
+  add_filter 'app/jobs/'
+  add_filter 'app/helpers/'
+  
+  # Dead Code / Old Architecture
+  add_filter 'app/controllers/attendance_records_controller.rb'
+  add_filter 'app/controllers/weekly_workouts_controller.rb'
+  add_filter 'app/models/weekly_workout.rb'
   add_filter 'app/controllers/admin/'
   add_filter 'app/controllers/members_controller.rb'
   add_filter 'app/models/member.rb'
   add_filter 'app/models/attendance_record.rb'
+  
+  # Future Features
+  add_filter 'app/models/recsports_credential.rb'
+  add_filter 'app/services/recsports/'
 end
 
 RSpec.configure do |config|

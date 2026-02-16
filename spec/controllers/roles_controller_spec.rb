@@ -9,7 +9,7 @@ RSpec.describe RolesController, type: :controller do
 
   describe "POST #enable_coach" do
     it "sets coach to true with the correct PIN" do
-      post :enable_coach, params: { password: "gigem2027" }
+      post :enable_coach, params: { password: "howdy" }
       user.reload
       expect(user.coach).to be true
       expect(flash[:notice]).to eq("Coach view enabled.")
