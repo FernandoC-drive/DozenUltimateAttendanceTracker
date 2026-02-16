@@ -52,7 +52,6 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
   gem 'rubocop', require: false
   gem 'rubocop-rails', require: false
-  gem 'faker'
   gem 'dotenv-rails'
   gem 'rspec-rails'
 end
@@ -74,3 +73,4 @@ gem 'devise'
 gem 'omniauth'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-rails_csrf_protection'
+gem 'faker'
