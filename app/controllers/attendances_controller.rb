@@ -1,15 +1,15 @@
 class AttendancesController < ApplicationController
   before_action :require_login!
 
-  def index
-    @view_mode = params[:view].presence_in(%w[daily weekly monthly]) || "monthly"
-    @selected_date = parse_date(params[:date])
+def index
+  @view_mode = params[:view].presence_in(%w[daily weekly monthly]) || "monthly"
+  @selected_date = parse_date(params[:date])
 
-    scope = current_user.coach? ? Attendance.includes(:player) : current_user.attendances
-    @attendances = filter_scope(scope)
+  scope = Attendance.includes(:player)
+  @attendances = filter_scope(scope)
 
-    @workout_checkins = current_user.coach? ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
-  end
+  @workout_checkins = current_user.coach == true ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
+end
 
   private
 
