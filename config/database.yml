@@ -21,5 +21,6 @@ test:
 # for the "DATABASE_URL" environment variable, which it provides automatically.
 production:
   <<: *default
-  url: <%= ENV["DATABASE_URL"] %>
   adapter: postgresql
+  encoding: unicode
+  url: <%= ENV.fetch("DATABASE_URL", "") %>
