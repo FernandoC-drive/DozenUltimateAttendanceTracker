@@ -1,16 +1,32 @@
+inherit_from: .rubocop_todo.yml
+
 require:
   - rubocop-rails
 
 AllCops:
   NewCops: enable
   Exclude:
-    - 'db/**/*'
-    - 'config/**/*'
-    - 'script/**/*'
-    - 'bin/**/*'
-    - 'node_modules/**/*'
     - 'vendor/**/*'
+    - 'node_modules/**/*'
+    - 'bin/**/*'
+    - 'db/schema.rb'
+    - 'log/**/*'
+    - 'tmp/**/*'
 
-# Standard Rails style preferences
-Style/Documentation:
-  Enabled: false
+# ENFORCING THE 5-SPACE INDENTATION
+Layout/IndentationWidth:
+  Width: 5
+
+# ENFORCING "SKINNY CONTROLLERS, FAT MODELS"
+Metrics/MethodLength:
+  Max: 15
+  Exclude:
+    - 'db/seeds.rb'
+
+# ENFORCING UPPERCASE CONSTANTS
+Naming/ConstantName:
+  Enabled: true
+
+# ENFORCING SNAKE_CASE FOR TABLE NAMES
+Naming/VariableNumber:
+  Enabled: true
