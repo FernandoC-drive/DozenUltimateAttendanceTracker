@@ -11,6 +11,19 @@ def index
   @workout_checkins = current_user.coach == true ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
 end
 
+def toggle
+    @attendance = Attendance.find(params[:id])
+    
+    # Check if the logged-in user is a coach before allowing the change
+    if current_user.coach?
+      @attendance.toggle_status!
+      # redirect_back keeps them on the same page they clicked the button from
+      redirect_back(fallback_location: attendances_path, notice: "Attendance updated successfully.")
+    else
+      redirect_back(fallback_location: attendances_path, alert: "Only coaches can edit attendance.")
+    end
+  end
+
   private
 
   def parse_date(raw)

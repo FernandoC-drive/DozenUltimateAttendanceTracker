@@ -19,6 +19,12 @@ Rails.application.routes.draw do
   resources :attendances, only: :index
   resources :workout_checkins, only: :create
 
+  resources :attendances do
+    member do
+      patch :toggle
+    end
+  end
+
   post 'toggle_coach', to: 'roles#enable_coach'
   delete 'toggle_coach', to: 'roles#disable_coach'
 

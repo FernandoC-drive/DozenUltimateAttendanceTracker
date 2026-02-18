@@ -9,6 +9,10 @@ class Attendance < ApplicationRecord
   validates :date, uniqueness: { scope: :player_id }
   validate :hours_must_be_non_negative_number
 
+  def toggle_status!
+    update(attended: !attended)
+  end
+
   scope :for_day, ->(date) { where(date: date) }
   scope :for_week, lambda { |date|
     beginning = date.beginning_of_week(:monday)

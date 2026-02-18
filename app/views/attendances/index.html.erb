@@ -26,7 +26,17 @@
           <td><%= attendance.player.name %></td>
           <td><%= attendance.date %></td>
           <td><%= attendance.hours %></td>
-          <td><%= attendance.attended ? "Yes" : "No" %></td>
+          <td style="display: flex; align-items: center; gap: 10px;">
+            <span><%= attendance.attended ? "Present" : "Absent" %></span>
+
+            <% if current_user.coach? %>
+              <%= button_to "Swap", 
+                            toggle_attendance_path(attendance), 
+                            method: :patch,
+                            form: { style: "display: inline-block; margin: 0;" },
+                            style: "font-size: 0.8em; padding: 2px 5px;" %>
+            <% end %>
+          </td>
           <td><%= attendance.source %></td>
         </tr>
       <% end %>
