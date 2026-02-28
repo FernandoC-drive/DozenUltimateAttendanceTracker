@@ -2,8 +2,8 @@ require "test_helper"
 
 class AdminAttendanceUpdatesTest < ActionDispatch::IntegrationTest
   setup do
-    @coach = User.create!(name: "Coach", email: "coach@example.com", role: :coach, password: "password")
-    @player = User.create!(name: "Player", email: "player@example.com", role: :player, password: "password")
+    @coach = User.create!(name: "Coach", email: "coach@example.com", password: "password", role: 1, coach: true)
+    @player = User.create!(name: "Player", email: "player@example.com", password: "password", role: 0)
     @attendance = Attendance.create!(player: @player, date: Date.current, hours: 1.0, attended: true)
   end
 

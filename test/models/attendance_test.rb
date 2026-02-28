@@ -2,7 +2,7 @@ require "test_helper"
 
 class AttendanceTest < ActiveSupport::TestCase
   setup do
-    @player = User.create!(name: "Player One", email: "player1@example.com", role: :player, password: "password")
+    @player = User.create!(name: "Player One", email: "player1@example.com", password: "password", role: 0)
   end
 
   test "rejects negative hours" do

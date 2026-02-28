@@ -54,6 +54,7 @@ group :development, :test do
   gem 'rubocop-rails', require: false
   gem 'dotenv-rails'
   gem 'rspec-rails'
+  gem 'minitest', '< 6.0'
 end
 
 group :development do
