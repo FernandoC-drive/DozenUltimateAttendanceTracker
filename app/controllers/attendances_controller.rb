@@ -8,7 +8,12 @@ def index
   scope = Attendance.includes(:player)
   @attendances = filter_scope(scope)
 
-  @workout_checkins = current_user.coach == true ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
+  @workout_month = params[:workout_month].present? ? Date.parse(params[:workout_month]) : Date.today
+
+  @workout_checkins = WorkoutCheckin.where(
+    player: current_user, 
+    workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month
+  ).order(workout_date: :desc)
 end
 
 def toggle

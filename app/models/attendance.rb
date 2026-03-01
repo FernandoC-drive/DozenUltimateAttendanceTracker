@@ -1,39 +1,31 @@
 class Attendance < ApplicationRecord
-  INVALID_HOURS_MESSAGE = "Invalid attendance hours.".freeze
+  belongs_to :player, class_name: 'User'
 
-  belongs_to :player, class_name: "User", inverse_of: :attendances
-
-  enum :source, { manual: 0, recsports: 1 }, default: :manual
 
   validates :date, presence: true
-  validates :date, uniqueness: { scope: :player_id }
-  validate :hours_must_be_non_negative_number
-
-  def toggle_status!
-    update(attended: !attended)
-  end
+  validates :date, uniqueness: { scope: :player_id, message: "has already been taken" }
+  
 
   scope :for_day, ->(date) { where(date: date) }
-  scope :for_week, lambda { |date|
-    beginning = date.beginning_of_week(:monday)
-    where(date: beginning..beginning.end_of_week(:sunday))
-  }
+  scope :for_week, ->(date) { where(date: date.beginning_of_week..date.end_of_week) }
   scope :for_month, ->(date) { where(date: date.beginning_of_month..date.end_of_month) }
 
+  # Heatmap Logic: Scaled for ~12 meetings a month
   def heat_level
-    return 0 if hours.to_f <= 0
-    return 1 if hours.to_f < 1.5
-    return 2 if hours.to_f < 3
+    # If they were absent on this specific day, the row gets no heat
+    return 0 unless attended?
 
-    3
-  end
+    # Count how many days the player attended in the month of this record
+    monthly_total = Attendance.where(player_id: player_id, attended: true)
+                              .for_month(date)
+                              .count
 
-  private
-
-  def hours_must_be_non_negative_number
-    number = Float(hours_before_type_cast)
-    errors.add(:hours, INVALID_HOURS_MESSAGE) if number.negative?
-  rescue ArgumentError, TypeError
-    errors.add(:hours, INVALID_HOURS_MESSAGE)
+    # Scale the color based on the 12 meetings/month metric
+    case monthly_total
+    when 1..4  then 1
+    when 5..8  then 2
+    when 9..11 then 3
+    else            4
+    end
   end
 end
