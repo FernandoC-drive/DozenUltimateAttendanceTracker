@@ -63,4 +63,30 @@ RSpec.describe Attendance, type: :model do
     end
   end
 
+  describe ".monthly_percent_for" do
+    let(:player) { User.create!(name: "PercentUser", email: "percent@tamu.edu", password: "password") }
+    let(:base_date) { Date.new(2026, 2, 1) }
+
+    it "returns 0.0 when there are no attendances" do
+      expect(Attendance.monthly_percent_for(player, base_date)).to eq(0.0)
+    end
+
+    it "calculates the correct percentage" do
+      # february 2026 has 28 days
+      # we'll mark 14 days attended
+      (1..14).each do |d|
+        Attendance.create!(player: player, date: base_date.change(day: d), attended: true, hours: 1)
+      end
+      expect(Attendance.monthly_percent_for(player, base_date)).to eq(50.0)
+    end
+
+    it "rounds to one decimal place" do
+      # create 1 out of 3-day month artificially by using march (31 days) but only 1 record
+      date = Date.new(2026, 3, 1)
+      Attendance.create!(player: player, date: date, attended: true, hours: 1)
+      expected = (1.0 / 31 * 100).round(1)
+      expect(Attendance.monthly_percent_for(player, date)).to eq(expected)
+    end
+  end
+
 end

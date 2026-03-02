@@ -40,6 +40,16 @@ docker run --rm -it --network attendance-net `
 - Coach: `coach@example.com` / `password`
 - Player: `player@example.com` / `password`
 
+## UI enhancements
+
+* **Attendance percentage bar**: displays the percentage of days attended during the selected month. Visible when a specific player has been selected.
+* **Calendar view**: coaches (and players, when looking at another person) can switch the view to "Calendar" after choosing a player to see a month grid. Each day shows present/absent and coaches may click the toggle link to flip attendance for that day.
+
+**Viewing permissions**
+
+*Both players and coaches may now select any player from the dropdown. Leaving the selector blank shows everyone’s attendance; entering a name filters to that player. This allows players to inspect their teammates’ histories without needing coach privileges.*
+
+
 ## Manual acceptance checks
 
 1. Sign in as coach.

@@ -158,3 +158,50 @@ td {
     border: 0;
   }
 }
+
+/* attendance-specific visuals */
+.attendance-summary {
+  margin-bottom: 1rem;
+}
+
+.progress-container {
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  width: 100%;
+  height: 1rem;
+  margin: 0.5rem 0;
+}
+
+.progress-fill {
+  background: var(--success);
+  height: 100%;
+}
+
+.calendar {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+.calendar th,
+.calendar td {
+  border: 1px solid var(--border);
+  padding: 0.4rem;
+  text-align: center;
+  vertical-align: top;
+  min-width: 2.5rem;
+}
+.calendar td.other-month {
+  background: #f9f9f9;
+  color: #aaa;
+}
+.calendar .day-number {
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+.toggle-link {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8em;
+}
+

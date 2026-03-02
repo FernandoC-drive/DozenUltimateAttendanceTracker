@@ -20,6 +20,9 @@ Rails.application.routes.draw do
   resources :workout_checkins, only: :create
 
   resources :attendances do
+    collection do
+      patch :toggle   # supports toggling by date/player in calendar
+    end
     member do
       patch :toggle
     end
