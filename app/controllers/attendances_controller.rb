@@ -29,7 +29,7 @@ class AttendancesController < ApplicationController
       @calendar_attendances = month_scope.index_by(&:date)
     end
 
-    @workout_checkins = current_user.coach == true ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
+    @workout_checkins = current_user.coach? ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
   end
 
   def toggle
