@@ -29,11 +29,12 @@ puts "Generating 10 random players with history..."
   unique_attendance_dates = (0..30).to_a.sample(5).map { |d| d.days.ago.to_date }
 
   unique_attendance_dates.each do |rand_date|
+    attended_flag = [true, false].sample
     Attendance.create!(
       player_id: new_player.id,
       date: rand_date,
-      hours: rand(1.0..3.0).round(1),
-      attended: [true, false].sample,
+      days_attended: attended_flag ? 1 : 0,
+      attended: attended_flag,
       source: 0
     )
   end
