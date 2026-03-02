@@ -9,7 +9,7 @@ class User < ApplicationRecord
   validates :name, :email, presence: true
   validates :email, uniqueness: true
 
-  devise :omniauthable, omniauth_providers: [:google_oauth2]
+  devise :omniauthable, :timeoutable, omniauth_providers: [:google_oauth2]
 
   def self.from_google(email:, full_name:, uid:, avatar_url:)
     user = find_or_initialize_by(email: email)

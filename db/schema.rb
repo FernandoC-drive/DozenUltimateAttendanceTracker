@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_02_000000) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_02_230207) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -77,19 +77,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_02_000000) do
     t.string "password_digest", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.boolean "coach", default: false
     t.string "uid"
     t.string "avatar_url"
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
   create_table "weekly_workouts", force: :cascade do |t|
-    t.bigint "member_id", null: false
     t.date "week_start_date"
     t.boolean "complete"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["member_id"], name: "index_weekly_workouts_on_member_id"
+    t.bigint "player_id", null: false
+    t.index ["player_id", "week_start_date"], name: "index_weekly_workouts_on_player_id_and_week_start_date", unique: true
+    t.index ["player_id"], name: "index_weekly_workouts_on_player_id"
   end
 
   create_table "workout_checkins", force: :cascade do |t|
@@ -105,6 +105,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_02_000000) do
 
   add_foreign_key "attendance_records", "members"
   add_foreign_key "attendances", "users", column: "player_id"
-  add_foreign_key "weekly_workouts", "members"
+  add_foreign_key "weekly_workouts", "users", column: "player_id"
   add_foreign_key "workout_checkins", "users", column: "player_id"
 end

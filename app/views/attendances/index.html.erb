@@ -101,25 +101,59 @@
 </section>
 
 <% unless current_user.coach? %>
-  <section class="card">
-    <h2>Workout Check-in</h2>
-    <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path do |f| %>
-      <div class="field">
-        <%= f.label :workout_date %>
-        <%= f.date_field :workout_date, required: true %>
+  <section class="card workout-card">
+    <header class="card-header">
+      <h2>Log a Workout</h2>
+      <p>Submit your workout date and a link to your proof.</p>
+    </header>
+
+    <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path, local: true, class: "workout-form" do |f| %>
+      <div class="form-group">
+        <%= f.label :workout_date, "Date Completed", class: "form-label" %>
+        <%= f.date_field :workout_date, required: true, max: Date.today, class: "form-control" %>
       </div>
-      <div class="field">
-        <%= f.label :proof_url, "Proof image URL" %>
-        <%= f.url_field :proof_url %>
+
+      <div class="form-group">
+        <%= f.label :proof_url, "Proof of Workout (URL)", class: "form-label" %>
+        <%= f.url_field :proof_url, placeholder: "https://...", class: "form-control" %>
       </div>
-      <%= f.submit "Save workout" %>
+
+      <div class="form-actions">
+        <%= f.submit "Save Workout", class: "btn-primary" %>
+      </div>
     <% end %>
 
-    <h3>This month</h3>
-    <ul>
-      <% @workout_checkins.each do |checkin| %>
-        <li><%= checkin.workout_date %> <% if checkin.proof_url.present? %>- <%= link_to "proof", checkin.proof_url, target: "_blank", rel: "noreferrer" %><% end %></li>
+    <div class="workout-history">
+      <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        
+        <%= link_to "← Previous", attendances_path(workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
+        
+        <h3 style="margin: 0;"><%= @workout_month.strftime("%B %Y") %></h3>
+        
+        <% if @workout_month.beginning_of_month < Date.today.beginning_of_month %>
+          <%= link_to "Next →", attendances_path(workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
+        <% else %>
+          <span class="text-muted" style="opacity: 0.5;">Next →</span>
+        <% end %>
+      </div>
+
+      <% if @workout_checkins.present? %>
+        <ul class="history-list">
+          <% @workout_checkins.each do |checkin| %>
+            <li class="history-item">
+              <strong><%= checkin.workout_date.strftime("%b %d, %Y") %></strong> 
+              
+              <% if checkin.proof_url.present? %>
+                - <%= link_to "View Proof", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link" %>
+              <% else %>
+                - <span class="text-muted">No proof provided</span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">No workouts logged for <%= @workout_month.strftime("%B") %>.</p>
       <% end %>
-    </ul>
+    </div>
   </section>
 <% end %>
