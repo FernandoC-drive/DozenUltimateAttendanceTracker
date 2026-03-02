@@ -4,6 +4,6 @@ class UpdateWeeklyWorkoutsToUsePlayers < ActiveRecord::Migration[8.0]
 
     add_reference :weekly_workouts, :player, null: false, foreign_key: { to_table: :users }
 
-    add_index :weekly_workouts, [:player_id, :week_start_date], unique: true
+    add_index :weekly_workouts, %i[player_id week_start_date], unique: true
   end
 end

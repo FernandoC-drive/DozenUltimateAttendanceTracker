@@ -5,7 +5,7 @@ class WorkoutCheckinsController < ApplicationController
     # Finds an existing check-in for this specific date, or starts a new one.
     # This smartly prevents the database uniqueness errors we tested for in RSpec!
     checkin = current_user.workout_checkins.find_or_initialize_by(
-      workout_date: workout_checkin_params[:workout_date]
+         workout_date: workout_checkin_params[:workout_date]
     )
 
     # .update() will either save the new record OR update the existing one.

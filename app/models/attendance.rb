@@ -1,10 +1,8 @@
 class Attendance < ApplicationRecord
   belongs_to :player, class_name: 'User'
 
-
   validates :date, presence: true
   validates :date, uniqueness: { scope: :player_id, message: "has already been taken" }
-  
 
   scope :for_day, ->(date) { where(date: date) }
   scope :for_week, ->(date) { where(date: date.beginning_of_week..date.end_of_week) }

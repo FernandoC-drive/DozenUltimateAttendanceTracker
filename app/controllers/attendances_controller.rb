@@ -8,11 +8,11 @@ def index
   scope = Attendance.includes(:player)
   @attendances = filter_scope(scope)
 
-  @workout_month = params[:workout_month].present? ? Date.parse(params[:workout_month]) : Date.today
+  @workout_month = params[:workout_month].present? ? Date.parse(params[:workout_month]) : Time.zone.today
 
   @workout_checkins = WorkoutCheckin.where(
-    player: current_user, 
-    workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month
+       player: current_user, 
+       workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month
   ).order(workout_date: :desc)
 end
 
