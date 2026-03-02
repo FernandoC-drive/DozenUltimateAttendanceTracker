@@ -12,7 +12,7 @@ class RolesController < ApplicationController
   end
 
   def disable_coach
-    current_user.update(coach: false)
+    current_user.player!
     redirect_back fallback_location: root_path, notice: "Returned to Player view."
   end
 end
