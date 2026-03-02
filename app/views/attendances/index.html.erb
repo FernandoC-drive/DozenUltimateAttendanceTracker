@@ -6,32 +6,98 @@
   <%= form_with url: attendances_path, method: :get, local: true, class: "toolbar" do |f| %>
     <%= f.label :date, "Date" %>
     <%= f.date_field :date, value: @selected_date %>
-    <%= f.select :view, [["Daily", "daily"], ["Weekly", "weekly"], ["Monthly", "monthly"]], selected: @view_mode %>
+
+    <%= f.label :player_id, "Player" %>
+    <%= f.select :player_id, @players.collect { |p| [p.name, p.id] }, { include_blank: "(all)" }, selected: @selected_player&.id %>
+
+    <%= f.label :view, "View" %>
+    <%= f.select :view, [["Daily", "daily"], ["Weekly", "weekly"], ["Monthly", "monthly"], ["Calendar", "calendar"]], selected: @view_mode %>
     <%= f.submit "Apply" %>
   <% end %>
 
-  <table>
-    <thead>
-      <tr>
-        <% if current_user.coach? %><th>Player</th><% end %>
-        <th>Date</th>
-        <th>Hours</th>
-        <th>Attended</th>
-        <th>Source</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @attendances.each do |attendance| %>
-        <tr class="heat-<%= attendance.heat_level %>">
-          <% if current_user.coach? %><td><%= attendance.player.name %></td><% end %>
-          <td><%= attendance.date %></td>
-          <td><%= attendance.hours %></td>
-          <td><%= attendance.attended ? "Yes" : "No" %></td>
-          <td><%= attendance.source %></td>
+
+  <% if @selected_player %>
+    <div class="attendance-summary">
+      <strong><%= @selected_player.name %> attendance for <%= @selected_date.strftime('%B %Y') %></strong>
+      <div class="progress-container" title="<%= @percent_attended %>%">
+        <div class="progress-fill" style="width: <%= @percent_attended %>%;"></div>
+      </div>
+      <p><%= @percent_attended %>% of days attended this month</p>
+    </div>
+  <% end %>
+
+  <% if @view_mode == "calendar" %>
+    <% if @selected_player %>
+      <table class="calendar">
+        <thead>
+          <tr>
+            <% %w[Mon Tue Wed Thu Fri Sat Sun].each do |day| %>
+              <th><%= day %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% first = @selected_date.beginning_of_month.beginning_of_week(:monday) %>
+          <% last = @selected_date.end_of_month.end_of_week(:sunday) %>
+          <% (first..last).to_a.in_groups_of(7, nil) do |week| %>
+            <tr>
+              <% week.each do |day| %>
+                <td class="<%= 'other-month' if day && day.month != @selected_date.month %>">
+                  <% if day %>
+                    <div class="day-number"><%= day.day %></div>
+                    <% attendance = @calendar_attendances[day] %>
+                    <% if attendance %>
+                      <div class="status"><%= attendance.attended ? '✔️' : '✘' %></div>
+                    <% else %>
+                      <div class="status">–</div>
+                    <% end %>
+                    <% if current_user.coach? %>
+                      <%= link_to "Toggle", toggle_attendances_path(date: day, player_id: @selected_player.id), method: :patch, class: "toggle-link" %>
+                    <% end %>
+                  <% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p>Please select a player to view the calendar.</p>
+    <% end %>
+  <% else %>
+    <table>
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Date</th>
+          <th>Days</th>
+          <th>Attended</th>
+          <th>Source</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @attendances.each do |attendance| %>
+          <tr class="heat-<%= attendance.heat_level %>">
+            <td><%= attendance.player.name %></td>
+            <td><%= attendance.date %></td>
+            <td><%= attendance.days_attended %></td>
+            <td style="display: flex; align-items: center; gap: 10px;">
+              <span><%= attendance.attended ? "Present" : "Absent" %></span>
+
+              <% if current_user.coach? %>
+                <%= button_to "Swap", 
+                              toggle_attendance_path(attendance), 
+                              method: :patch,
+                              form: { style: "display: inline-block; margin: 0;" },
+                              style: "font-size: 0.8em; padding: 2px 5px;" %>
+              <% end %>
+            </td>
+            <td><%= attendance.source %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
 </section>
 
 <% unless current_user.coach? %>

@@ -10,10 +10,10 @@ module Admin
     def create
       attendance = Attendance.find_or_initialize_by(player_id: attendance_create_params[:player_id], date: attendance_create_params[:date])
 
-      if attendance.update(attendance_create_params.slice(:hours, :attended, :notes).merge(override_by_leadership: true, source: :manual))
+      if attendance.update(attendance_create_params.slice(:days_attended, :attended, :notes).merge(override_by_leadership: true, source: :manual))
         redirect_to admin_attendances_path(date: attendance.date), notice: "Attendance updated successfully."
       else
-        message = attendance.errors[:hours].include?(Attendance::INVALID_HOURS_MESSAGE) ? Attendance::INVALID_HOURS_MESSAGE : attendance.errors.full_messages.to_sentence
+        message = attendance.errors.full_messages.to_sentence
         redirect_to admin_attendances_path(date: attendance_create_params[:date]), alert: message
       end
     end
@@ -24,7 +24,7 @@ module Admin
       if attendance.update(attendance_params.merge(override_by_leadership: true, source: :manual))
         redirect_to admin_attendances_path(date: attendance.date), notice: "Attendance updated successfully."
       else
-        message = attendance.errors[:hours].include?(Attendance::INVALID_HOURS_MESSAGE) ? Attendance::INVALID_HOURS_MESSAGE : attendance.errors.full_messages.to_sentence
+        message = attendance.errors.full_messages.to_sentence
         redirect_to admin_attendances_path(date: attendance.date), alert: message
       end
     end
@@ -32,11 +32,11 @@ module Admin
     private
 
     def attendance_params
-      params.require(:attendance).permit(:hours, :attended, :notes)
+      params.require(:attendance).permit(:days_attended, :attended, :notes)
     end
 
     def attendance_create_params
-      params.require(:attendance).permit(:player_id, :date, :hours, :attended, :notes)
+      params.require(:attendance).permit(:player_id, :date, :days_attended, :attended, :notes)
     end
 
     def parse_date(raw)

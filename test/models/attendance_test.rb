@@ -2,21 +2,21 @@ require "test_helper"
 
 class AttendanceTest < ActiveSupport::TestCase
   setup do
-    @player = User.create!(name: "Player One", email: "player1@example.com", role: :player, password: "password")
+    @player = User.create!(name: "Player One", email: "player1@example.com", password: "password", role: 0)
   end
 
-  test "rejects negative hours" do
-    attendance = Attendance.new(player: @player, date: Date.current, hours: -1)
+  test "rejects negative days" do
+    attendance = Attendance.new(player: @player, date: Date.current, days_attended: -1)
 
     assert_not attendance.valid?
-    assert_includes attendance.errors[:hours], "Invalid attendance hours."
+    assert_includes attendance.errors[:days_attended], "must be greater than or equal to 0"
   end
 
-  test "rejects non numeric hours" do
+  test "rejects non integer days" do
     attendance = Attendance.new(player: @player, date: Date.current)
-    attendance.hours = "abc"
+    attendance.days_attended = 1.5
 
     assert_not attendance.valid?
-    assert_includes attendance.errors[:hours], "Invalid attendance hours."
+    assert_includes attendance.errors[:days_attended], "must be an integer"
   end
 end
