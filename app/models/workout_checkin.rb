@@ -3,7 +3,7 @@ class WorkoutCheckin < ApplicationRecord
 
   validates :workout_date, presence: true
   validates :workout_date, uniqueness: { scope: :player_id, message: "has already been logged" }
-  validates :proof_url, format: { URI::DEFAULT_PARSER.make_regexp(%w[http https]) }, allow_blank: true
+  validates :proof_url, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]) }, allow_blank: true
 
   after_create_commit :mark_week_as_complete
 
