@@ -4,7 +4,7 @@ class AttendancesTest < ApplicationSystemTestCase
   setup do
     @coach = User.create!(name: "Coach", email: "coach2@example.com", password: "password", role: 1, coach: true)
     @player = User.create!(name: "Player2", email: "player2@example.com", password: "password", role: 0)
-    Attendance.create!(player: @player, date: Date.current.beginning_of_month, hours: 1.0, attended: true)
+    Attendance.create!(player: @player, date: Date.current.beginning_of_month, days_attended: 1, attended: true)
   end
 
   def sign_in(user)
@@ -36,7 +36,7 @@ class AttendancesTest < ApplicationSystemTestCase
 
   test "player can view other players' attendance" do
     other = User.create!(name: "OtherPlayer", email: "other@tamu.edu", password: "password", role: 0)
-    Attendance.create!(player: other, date: Date.current.beginning_of_month, hours: 2.0, attended: false)
+    Attendance.create!(player: other, date: Date.current.beginning_of_month, days_attended: 0, attended: false)
 
     sign_in(@player)
 

@@ -39,7 +39,7 @@ class AttendancesController < ApplicationController
       # flip the status, default to true when creating new record
       if @attendance.new_record?
         @attendance.attended = true
-        @attendance.hours ||= 0
+        @attendance.days_attended = 1
         @attendance.save!
       else
         @attendance.toggle_status!

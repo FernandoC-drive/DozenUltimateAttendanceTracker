@@ -2,38 +2,51 @@
 
 ## Local testing with Docker (recommended)
 
-Run these commands from the project root in PowerShell.
+This repository ships with a `docker-compose.yml` that orchestrates both the
+PostgreSQL database and the Rails application.  Using Compose avoids manual
+network creation and container name conflicts.
 
-1. Create a Docker network (one time):
+1. From the project root, bring the stack up (this will build the web image if
+   necessary, create the database, run migrations and seed the development
+   data):
 
-```powershell
-docker network create attendance-net
+    ```powershell
+    docker compose up --build
+    ```
+
+   The first run may take a minute while the gems are installed.  Once the
+   rails server starts you can visit the app at `http://localhost:3000`.
+
+2. When you're done, stop the services with `Ctrl+C` in the terminal or run:
+
+    ```powershell
+    docker compose down
+    ```
+
+3. If you ever need to run one‑off commands (tests, console, migrations) you
+   can invoke the web service explicitly.  Because the service uses a `bash
+   -lc` entrypoint, wrap your command in quotes and call it through Bundler so
+   the Rails executable is available. For example:
+
+    ```powershell
+    docker compose run --rm web bash -lc "bundle exec rails test"
+    docker compose run --rm web bash -lc "bundle exec rails db:reset db:seed"
+    ```
+
+   (substitute `rails console`, `rails db:migrate`, etc. as needed.)
+
+4. (Optional) remove volumes to reset the database state:
+
+    ```powershell
+    docker compose down -v
+    ```
+
+
+Open the app in your browser at:
+
 ```
-
-2. Start PostgreSQL:
-
-```powershell
-docker run -d --name attendance-db --network attendance-net `
-  -e POSTGRES_USER=postgres `
-  -e POSTGRES_PASSWORD=postgres `
-  -e POSTGRES_DB=d_uattendandance_development `
-  -p 5432:5432 postgres:16
+http://localhost:3000
 ```
-
-3. Start Rails app:
-
-```powershell
-docker run --rm -it --network attendance-net `
-  -p 3000:3000 `
-  -e DATABASE_URL=postgres://postgres:postgres@attendance-db:5432/d_uattendandance_development `
-  -v ${PWD}:/app `
-  --entrypoint /bin/bash paulinewade/csce431:sp26v1 `
-  -lc "cd /app && sed -i 's/\r$//' bin/* && bundle install && bundle exec rails db:prepare db:seed && bundle exec rails server -b 0.0.0.0 -p 3000"
-```
-
-4. Open the app:
-
-`http://localhost:3000`
 
 ## Test accounts
 
@@ -55,26 +68,29 @@ docker run --rm -it --network attendance-net `
 1. Sign in as coach.
 2. Go to `Admin Attendance`, create/update attendance.
 3. Confirm success flash: `Attendance updated successfully.`
-4. Enter `-1` or `abc` for hours and confirm: `Invalid attendance hours.`
+4. Enter `-1` or `abc` for days attended and confirm you see a validation error.
 5. Sign out and sign in as player.
-6. Confirm updated hours appear on player attendance page.
+6. Confirm updated days appear on player attendance page.
 
 ## Run automated tests
 
-In a new terminal while Rails container is running:
+With the Docker Compose stack running (see above) you can execute the tests
+from the `web` service:
 
 ```powershell
-docker run --rm -it --network attendance-net `
-  -e DATABASE_URL=postgres://postgres:postgres@attendance-db:5432/d_uattendandance_development `
-  -v ${PWD}:/app `
-  --entrypoint /bin/bash paulinewade/csce431:sp26v1 `
-  -lc "cd /app && sed -i 's/\r$//' bin/* && bundle install && bundle exec rails test"
+docker compose run --rm web rails test
 ```
+
+This will spin up a temporary container, install any missing gems and run the
+Rails test suite against the development database.
+
 
 ## Cleanup
 
+Stop and remove the containers (and optionally volumes) with Docker Compose:
+
 ```powershell
-docker stop attendance-db
-docker rm attendance-db
-docker network rm attendance-net
+docker compose down
+# remove volumes too:
+docker compose down -v
 ```

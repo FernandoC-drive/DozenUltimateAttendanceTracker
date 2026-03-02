@@ -44,15 +44,15 @@ RSpec.describe AttendancesController, type: :controller do
 
       it "allows viewing other players when no filter is applied" do
         other = User.create!(email: 'other@tamu.edu', name: 'Other', password: 'password')
-        Attendance.create!(player: other, date: Date.current, hours: 1)
-        Attendance.create!(player: player, date: Date.current, hours: 2)
+        Attendance.create!(player: other, date: Date.current, days_attended: 1)
+        Attendance.create!(player: player, date: Date.current, days_attended: 1)
         get :index
         names = assigns(:attendances).map { |a| a.player.name }
         expect(names).to include('Other', player.name)
       end
 
       it "can filter to a specific player and still calculate percent" do
-        Attendance.create!(player: player, date: Date.current, attended: true, hours: 1)
+        Attendance.create!(player: player, date: Date.current, attended: true, days_attended: 1)
         get :index, params: { player_id: player.id }
         expect(assigns(:selected_player)).to eq(player)
         expect(assigns(:percent_attended)).to be_a(Float)
@@ -60,7 +60,7 @@ RSpec.describe AttendancesController, type: :controller do
 
       describe "PATCH #toggle" do
         it "does not allow players to change attendance" do
-          att = Attendance.create!(player: player, date: Date.current, attended: false, hours: 1)
+          att = Attendance.create!(player: player, date: Date.current, attended: false, days_attended: 0)
           patch :toggle, params: { id: att.id }
           att.reload
           expect(att.attended).to be_falsey
@@ -80,7 +80,7 @@ RSpec.describe AttendancesController, type: :controller do
 
       it "can filter by player_id and set percent and calendar data" do
         p = User.create!(email: 'p3@tamu.edu', name: 'P3', password: 'password', role: :player)
-        Attendance.create!(player: p, date: Date.current, attended: true, hours: 1)
+        Attendance.create!(player: p, date: Date.current, attended: true, days_attended: 1)
         get :index, params: { player_id: p.id, view: 'calendar' }
         expect(assigns(:selected_player)).to eq(p)
         expect(assigns(:percent_attended)).to eq( (1.0 / Date.current.end_of_month.day * 100).round(1) )
@@ -94,7 +94,7 @@ RSpec.describe AttendancesController, type: :controller do
 
       describe "PATCH #toggle" do
         it "toggles an existing attendance" do
-          att = Attendance.create!(player: player, date: Date.current, attended: false, hours: 1)
+          att = Attendance.create!(player: player, date: Date.current, attended: false, days_attended: 0)
           patch :toggle, params: { id: att.id }
           expect(att.reload.attended).to be_truthy
         end

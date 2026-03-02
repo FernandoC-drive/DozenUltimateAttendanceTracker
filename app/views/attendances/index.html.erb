@@ -70,7 +70,7 @@
         <tr>
           <th>Player</th>
           <th>Date</th>
-          <th>Hours</th>
+          <th>Days</th>
           <th>Attended</th>
           <th>Source</th>
         </tr>
@@ -80,7 +80,7 @@
           <tr class="heat-<%= attendance.heat_level %>">
             <td><%= attendance.player.name %></td>
             <td><%= attendance.date %></td>
-            <td><%= attendance.hours %></td>
+            <td><%= attendance.days_attended %></td>
             <td style="display: flex; align-items: center; gap: 10px;">
               <span><%= attendance.attended ? "Present" : "Absent" %></span>
 
