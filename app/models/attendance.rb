@@ -34,6 +34,6 @@ class Attendance < ApplicationRecord
 
   def heat_level
     # since each attendance record represents a single day, heat is either 0 or 1
-    days_attended.to_i > 0 ? 1 : 0
+    days_attended.to_i.positive? ? 1 : 0
   end
 end

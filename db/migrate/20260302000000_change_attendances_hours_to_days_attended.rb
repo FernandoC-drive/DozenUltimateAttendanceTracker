@@ -9,7 +9,7 @@ class ChangeAttendancesHoursToDaysAttended < ActiveRecord::Migration[8.0]
         say_with_time "Backfilling days_attended from hours/attended" do
           Attendance.reset_column_information
           Attendance.find_each do |a|
-            value = (a.attended || a.hours.to_f > 0) ? 1 : 0
+            value = a.attended || a.hours.to_f.positive? ? 1 : 0
             a.update_column(:days_attended, value)
           end
         end

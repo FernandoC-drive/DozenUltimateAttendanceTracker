@@ -21,7 +21,7 @@ Rails.application.routes.draw do
 
   resources :attendances do
     collection do
-      patch :toggle   # supports toggling by date/player in calendar
+      patch :toggle # supports toggling by date/player in calendar
     end
     member do
       patch :toggle

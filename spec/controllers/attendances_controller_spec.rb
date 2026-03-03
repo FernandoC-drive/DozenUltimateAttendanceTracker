@@ -89,7 +89,7 @@ RSpec.describe AttendancesController, type: :controller do
         Attendance.create!(player: p, date: Date.current, attended: true, days_attended: 1)
         get :index, params: { player_id: p.id, view: 'calendar' }
         expect(assigns(:selected_player)).to eq(p)
-        expect(assigns(:percent_attended)).to eq( (1.0 / Date.current.end_of_month.day * 100).round(1) )
+        expect(assigns(:percent_attended)).to eq((1.0 / Date.current.end_of_month.day * 100).round(1))
         expect(assigns(:calendar_attendances)).to be_a(Hash)
       end
 
@@ -107,7 +107,7 @@ RSpec.describe AttendancesController, type: :controller do
 
         it "creates a new attendance when toggled by date/player" do
           patch :toggle, params: { date: Date.current, player_id: player.id }
-          expect(Attendance.where(player: player, date: Date.current).exists?).to be(true)
+          expect(Attendance.exists?(player: player, date: Date.current)).to be(true)
         end
       end
     end

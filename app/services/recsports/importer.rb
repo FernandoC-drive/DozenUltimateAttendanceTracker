@@ -14,7 +14,7 @@ module Recsports
 
         attendance = Attendance.find_or_initialize_by(player: player, date: date)
         # convert hours into a simple days indicator
-        attendance.days_attended = extract_hours(row).to_f > 0 ? 1 : 0
+        attendance.days_attended = extract_hours(row).to_f.positive? ? 1 : 0
         attendance.attended = extract_attended(row)
         attendance.source = :recsports
         attendance.external_id = row["id"].presence || row["external_id"].presence

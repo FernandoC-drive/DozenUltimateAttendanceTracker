@@ -5,21 +5,21 @@ RSpec.describe "Attendances accessibility", type: :system do
 
   let!(:player) do
     User.create!(
-      name: "Alex Player",
-      email: "alex_player@example.com",
-      password: "password",
-      role: :player,
-      coach: false
+         name: "Alex Player",
+         email: "alex_player@example.com",
+         password: "password",
+         role: :player,
+         coach: false
     )
   end
 
   let!(:other_player) do
     User.create!(
-      name: "Sam Other",
-      email: "sam_other@example.com",
-      password: "password",
-      role: :player,
-      coach: false
+         name: "Sam Other",
+         email: "sam_other@example.com",
+         password: "password",
+         role: :player,
+         coach: false
     )
   end
 
