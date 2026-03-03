@@ -83,7 +83,7 @@
                         <span class="status-text">No data</span>
                       </div>
                     <% end %>
-                    <% if current_user.coach == true %>
+                    <% if current_user.coach? %>
                       <%= button_to "Toggle", toggle_attendances_path(date: day, player_id: @selected_player.id), method: :patch,
                                     form: { style: "display: inline-block;" },
                                     class: "toggle-link",
