@@ -7,38 +7,51 @@
           1,
           null,
           1,
+<<<<<<< new_ui
           null,
           1,
           10,
           10,
           null,
+=======
+          1,
           null,
-          10,
-          10,
+          1,
+          15,
+          15,
+          15,
+          null,
+          15,
+          null,
+          15,
           null,
           null,
           null,
           null,
           null,
-          10,
+          15,
+          15,
+          null,
+          null,
+          15,
+          15,
+          15,
+          null,
+          15,
+          2,
+          2,
           2,
           null,
           null,
-          null,
-          null,
-          10,
-          10,
-          10,
+          15,
+>>>>>>> test
           null,
           10,
-          4,
-          4,
-          4,
-          null,
-          null,
           10,
           null,
+<<<<<<< new_ui
           null,
+=======
           1,
           3,
           2,
@@ -47,6 +60,77 @@
           1,
           1,
           1,
+>>>>>>> test
+          null,
+          null,
+          3,
+          null,
+<<<<<<< new_ui
+          10,
+          2,
+          null,
+=======
+          2,
+          1,
+          1,
+          1,
+>>>>>>> test
+          null,
+          null,
+<<<<<<< new_ui
+          null,
+          10,
+          10,
+          10,
+          null,
+          10,
+          4,
+          4,
+          4,
+=======
+          null,
+          2,
+          null,
+          1,
+          null,
+          null,
+          null,
+          1,
+          null,
+          1,
+          16,
+          null,
+          13,
+          null,
+          null,
+          1,
+          15,
+          null,
+          1,
+          null,
+          2,
+          null,
+          null,
+          12,
+          null,
+>>>>>>> test
+          null,
+          null,
+          10,
+          null,
+          null,
+          1,
+<<<<<<< new_ui
+          3,
+          2,
+=======
+          84,
+>>>>>>> test
+          null,
+          null,
+          1,
+          1,
+          1,
           null,
           null,
           null,
@@ -56,6 +140,15 @@
           null,
           2,
           1,
+<<<<<<< new_ui
+=======
+          24,
+          null
+        ]
+      },
+      "/csce431/app/controllers/roles_controller.rb": {
+        "lines": [
+>>>>>>> test
           1,
           1,
           null,
@@ -120,19 +213,43 @@
           null,
           null,
           null,
+<<<<<<< new_ui
+          2,
+=======
+          0,
+          0,
+          null,
+>>>>>>> test
+          null,
+          1,
+          null,
+          null,
+<<<<<<< new_ui
           2,
           null,
+=======
           1,
           null,
           null,
           2,
           null,
+          null,
+          null,
+          null,
+          null,
+          2,
+>>>>>>> test
           1,
           1,
           null,
           null,
           null,
           1,
+<<<<<<< new_ui
+=======
+          null,
+          null,
+>>>>>>> test
           1,
           1,
           1,
@@ -148,6 +265,7 @@
           1,
           null,
           1,
+<<<<<<< new_ui
           1,
           null,
           1,
@@ -168,6 +286,36 @@
           null,
           0,
           0,
+=======
+          1,
+          1,
+          null,
+          1,
+          1,
+          1,
+          null,
+          0,
+          null,
+          null,
+          null,
+          2,
+          3,
+          20,
+          null,
+          null,
+          1,
+          5,
+          5,
+          5,
+          null,
+          5,
+          5,
+          null,
+          null,
+          1,
+          null,
+          2,
+>>>>>>> test
           null,
           null
         ]
@@ -186,7 +334,10 @@
           null,
           1,
           null,
+<<<<<<< new_ui
           1,
+=======
+>>>>>>> test
           1,
           1,
           null,
@@ -228,9 +379,25 @@
           1,
           null,
           1,
+          1,
+          1,
           null,
           1,
+          null,
           1,
+          null,
+          1,
+          null,
+          6,
+          null,
+          null,
+          6,
+          null,
+          null,
+          null,
+          null,
+          null,
+          6,
           null
         ]
       },
@@ -316,6 +483,10 @@
         "branches": {}
       }
     },
+<<<<<<< new_ui
     "timestamp": 1772503633
+=======
+    "timestamp": 1772499859
+>>>>>>> test
   }
 }

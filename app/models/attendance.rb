@@ -16,10 +16,7 @@ class Attendance < ApplicationRecord
   end
 
   scope :for_day, ->(date) { where(date: date) }
-  scope :for_week, lambda { |date|
-    beginning = date.beginning_of_week(:monday)
-    where(date: beginning..beginning.end_of_week(:sunday))
-  }
+  scope :for_week, ->(date) { where(date: date.beginning_of_week..date.end_of_week) }
   scope :for_month, ->(date) { where(date: date.beginning_of_month..date.end_of_month) }
 
   # returns percentage of days attended for a given player/month (0.0..100.0)
