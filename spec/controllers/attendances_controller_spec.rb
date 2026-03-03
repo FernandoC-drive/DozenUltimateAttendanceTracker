@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe AttendancesController, type: :controller do
-  let(:player) { User.create!(email: 'player@tamu.edu', name: 'Player', password: 'password', coach: false) }
-  let(:coach) { User.create!(email: 'coach@tamu.edu', name: 'Coach', password: 'password', coach: true) }
+  let(:player) { User.create!(email: 'player@tamu.edu', name: 'Player', password: 'password', role: :player) }
+  let(:coach) { User.create!(email: 'coach@tamu.edu', name: 'Coach', password: 'password', role: :coach) }
 
   describe "GET #index" do
     context "when not logged in" do
@@ -49,7 +49,7 @@ RSpec.describe AttendancesController, type: :controller do
       end
 
       it "allows viewing other players when no filter is applied" do
-        other = User.create!(email: 'other@tamu.edu', name: 'Other', password: 'password')
+        other = User.create!(email: 'other@tamu.edu', name: 'Other', password: 'password', role: :player)
         Attendance.create!(player: other, date: Date.current, days_attended: 1)
         Attendance.create!(player: player, date: Date.current, days_attended: 1)
         get :index
@@ -62,6 +62,16 @@ RSpec.describe AttendancesController, type: :controller do
         get :index, params: { player_id: player.id }
         expect(assigns(:selected_player)).to eq(player)
         expect(assigns(:percent_attended)).to be_a(Float)
+      end
+
+      it "loads the player's workout check-ins for the specified month" do
+        WorkoutCheckin.create!(player: player, workout_date: Date.new(2026, 2, 15))
+        
+        # Pass a specific month in the URL to hit your @workout_month logic
+        get :index, params: { workout_month: "2026-02-01" }
+        
+        expect(assigns(:workout_month)).to eq(Date.new(2026, 2, 1))
+        expect(assigns(:workout_checkins).count).to eq(1)
       end
 
       describe "PATCH #toggle" do
@@ -96,6 +106,12 @@ RSpec.describe AttendancesController, type: :controller do
       it "prompts for player when calendar view without one" do
         get :index, params: { view: 'calendar' }
         expect(assigns(:selected_player)).to be_nil
+      end
+
+
+      it "returns an empty relation for workout_checkins if the user is a coach" do
+        get :index
+        expect(assigns(:workout_checkins)).to be_empty
       end
 
       describe "PATCH #toggle" do
