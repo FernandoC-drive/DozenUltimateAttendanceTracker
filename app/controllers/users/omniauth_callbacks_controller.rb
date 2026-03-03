@@ -9,7 +9,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       avatar_url: auth.info.image
     )
 
-    if user.present?
+    if user.persisted?
       sign_out_all_scopes
       flash[:success] = "Successfully authenticated from Google account."
       sign_in_and_redirect user, event: :authentication
