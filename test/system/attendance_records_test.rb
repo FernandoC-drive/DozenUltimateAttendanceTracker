@@ -12,6 +12,12 @@ class AttendanceRecordsTest < ApplicationSystemTestCase
     fill_in "Email", with: user.email
     fill_in "Password", with: "password"
     click_on "Log in"
+
+    # ensure the coach flag was set for coach-role accounts
+    if user.role == "coach"
+      user.reload
+      assert user.coach, "expected coach flag to be true after login"
+    end
   end
 
   test "visiting the index" do

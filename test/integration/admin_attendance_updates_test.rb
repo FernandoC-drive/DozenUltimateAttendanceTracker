@@ -26,6 +26,14 @@ class AdminAttendanceUpdatesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "2"
   end
 
+  test "coach sees a default player selection" do
+    sign_in(@coach)
+    get attendances_path
+    # response should render summary for the very first player
+    first_name = User.where(role: :player).order(:name).first.name
+    assert_includes response.body, first_name
+  end
+
   test "invalid days shows required error" do
     sign_in(@coach)
 
@@ -44,5 +52,10 @@ class AdminAttendanceUpdatesTest < ActionDispatch::IntegrationTest
 
   def sign_in(user)
     post session_path, params: { email: user.email, password: "password" }
+
+    if user.role == "coach"
+      user.reload
+      assert user.coach, "coach flag should have been true after logging in"
+    end
   end
 end

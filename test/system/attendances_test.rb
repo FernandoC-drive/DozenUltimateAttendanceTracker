@@ -12,20 +12,23 @@ class AttendancesTest < ApplicationSystemTestCase
     fill_in "Email", with: user.email
     fill_in "Password", with: "password"
     click_on "Log in"
+
+    if user.role == "coach"
+      user.reload
+      assert user.coach, "coach flag should be set after login"
+    end
   end
 
   test "coach sees calendar and can toggle days" do
     sign_in(@coach)
 
-    visit attendances_path
-    # choose the player and calendar view
-    select @player.name, from: "Player"
-    select "Calendar", from: "View"
-    click_on "Apply"
+    # we no longer need to pick a player manually; the controller defaults to
+    # the first one for coaches. we still explicitly request calendar view
+    visit attendances_path(view: "calendar")
 
     assert_selector ".attendance-summary"
     assert_selector ".calendar"
-    assert_selector "button.toggle-link", text: "Toggle" # make sure coaches get a button
+    assert_selector "button.toggle-link", text: "Toggle"
 
     # toggle the first day
     first_day_button = find(".toggle-link", match: :first)
@@ -33,6 +36,14 @@ class AttendancesTest < ApplicationSystemTestCase
 
     # after toggling, the page should refresh and show updated status
     assert_selector ".calendar"
+  end
+
+  test "coach sees swap buttons without selecting player" do
+    sign_in(@coach)
+    visit attendances_path(view: "daily")
+
+    # at least one attendance row should exist (we created @player in setup)
+    assert_selector "button", text: "Swap"
   end
 
   test "player can view other players' attendance" do

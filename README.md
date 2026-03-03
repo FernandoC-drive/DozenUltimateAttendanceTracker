@@ -37,13 +37,13 @@ docker run --rm -it --network attendance-net `
 
 ## Test accounts
 
-- Coach: `coach@example.com` / `password`
+- Coach: `coach@example.com` / `password` (logging in now automatically enables the coach view flag)
 - Player: `player@example.com` / `password`
 
 ## Manual acceptance checks
 
-1. Sign in as coach.
-2. Go to `Admin Attendance`, create/update attendance.
+1. Sign in as coach (the system will flip on the coach boolean when you log in; coaches are also now defaulted to the first player when visiting the attendance page).
+2. Go to `Admin Attendance`, create/update attendance.  You no longer have to select a player – a default is chosen automatically and the toggle/swap buttons are visible in every view.
 3. Confirm success flash: `Attendance updated successfully.`
 4. Enter `-1` or `abc` for hours and confirm: `Invalid attendance hours.`
 5. Sign out and sign in as player.

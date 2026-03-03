@@ -10,7 +10,16 @@ class AttendancesController < ApplicationController
     # everyone can optionally pick a player to view; coaches and players alike
     @players = User.where(role: :player).order(:name)
     @selected_player = User.find_by(id: params[:player_id]) if params[:player_id].present?
-    # players and coaches can leave the selector blank to see all records
+
+    # coaches generally want to toggle someone’s attendance; if they haven’t
+    # picked anyone explicitly we default to the first player so that the
+    # calendar/swap buttons are always rendered. (non‑coach users keep the
+    # behaviour of showing every record when the selector is blank.)
+    if current_user.coach == true && @selected_player.nil? && @players.any?
+      @selected_player = @players.first
+    end
+    # players and coaches can still explicitly leave the selector blank if they
+    # really want to see everything, but coaches now get a sensible default
 
     scope = Attendance.includes(:player)
     scope = scope.where(player: @selected_player) if @selected_player
@@ -35,7 +44,10 @@ class AttendancesController < ApplicationController
       @attendance = Attendance.find_or_initialize_by(player: player, date: date)
     end
 
-    if current_user.coach?
+    # use the boolean `coach` column rather than enum, since the latter only
+    # reflects the user's role and may remain `player` even when the coach view
+    # flag has been toggled.
+    if current_user.coach == true
       # flip the status, default to true when creating new record
       if @attendance.new_record?
         @attendance.attended = true

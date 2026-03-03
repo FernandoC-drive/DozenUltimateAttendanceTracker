@@ -59,7 +59,7 @@ class AttendanceRecordsController < ApplicationController
 
   # PATCH /attendance_records/1/toggle
   def toggle
-    if current_user.coach?
+    if current_user.coach == true
       @attendance_record.toggle!(:is_present)
       message = "Attendance toggled successfully."
     else

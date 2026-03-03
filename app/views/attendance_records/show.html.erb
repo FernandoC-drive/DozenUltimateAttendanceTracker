@@ -3,7 +3,7 @@
 <%= render @attendance_record %>
 
 <div>
-  <% if current_user.coach? %>
+  <% if current_user.coach == true %>
     <%= button_to "Toggle presence", toggle_attendance_record_path(@attendance_record), method: :patch, form: { style: "display: inline-block; margin-right: 10px;" }, style: "font-size: 0.8em; padding: 2px 5px;" %>
   <% end %>
 
