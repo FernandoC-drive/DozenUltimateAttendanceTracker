@@ -17,6 +17,27 @@ RSpec.describe SessionsController, type: :controller do
       expect(response).to redirect_to(root_path)
     end
 
+    it "enables the coach flag on login when the user has a coach role" do
+      coach_user = User.create!(
+        email: 'coachlogin@tamu.edu',
+        name: 'Logging Coach',
+        password: 'password123',
+        role: :coach,
+        coach: false # start false to simulate not-yet-enabled state
+      )
+
+      post :create, params: { email: coach_user.email, password: 'password123' }
+      # debug information to understand why update might not occur
+      puts "[debug] after post, session user = #{session[:user_id]}, role=#{coach_user.role}, coach=#{coach_user.coach}"
+      coach_user.reload
+      puts "[debug] after reload, role=#{coach_user.role}, coach=#{coach_user.coach}"
+
+      expect(session[:user_id]).to eq(coach_user.id)
+      # make sure the user really has the coach role before we check the flag
+      expect(coach_user.role).to eq("coach")
+      expect(coach_user.coach).to be true
+    end
+
     it "rejects login with invalid credentials" do
       post :create, params: { email: user.email, password: 'wrongpassword' }
       expect(session[:user_id]).to be_nil
