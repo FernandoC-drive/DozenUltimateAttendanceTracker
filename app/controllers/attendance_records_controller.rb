@@ -1,5 +1,5 @@
 class AttendanceRecordsController < ApplicationController
-  before_action :set_attendance_record, only: %i[ show edit update destroy ]
+  before_action :set_attendance_record, only: %i[ show edit update destroy toggle ]
 
   # GET /attendance_records or /attendance_records.json
   def index
@@ -55,6 +55,18 @@ class AttendanceRecordsController < ApplicationController
       format.html { redirect_to attendance_records_path, notice: "Attendance record was successfully destroyed.", status: :see_other }
       format.json { head :no_content }
     end
+  end
+
+  # PATCH /attendance_records/1/toggle
+  def toggle
+    if current_user.coach?
+      @attendance_record.toggle!(:is_present)
+      message = "Attendance toggled successfully."
+    else
+      message = "Only coaches can edit attendance."
+    end
+
+    redirect_back(fallback_location: attendance_records_path, notice: message)
   end
 
   private

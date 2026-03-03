@@ -25,10 +25,11 @@ class AttendancesTest < ApplicationSystemTestCase
 
     assert_selector ".attendance-summary"
     assert_selector ".calendar"
+    assert_selector "button.toggle-link", text: "Toggle" # make sure coaches get a button
 
     # toggle the first day
-    first_day_link = find(".toggle-link", match: :first)
-    first_day_link.click
+    first_day_button = find(".toggle-link", match: :first)
+    first_day_button.click
 
     # after toggling, the page should refresh and show updated status
     assert_selector ".calendar"
@@ -50,4 +51,16 @@ class AttendancesTest < ApplicationSystemTestCase
     click_on "Apply"
     assert_text "OtherPlayer"
     assert_no_text "Player2"
-  endend
+  end
+
+  test "coach can toggle from table view" do
+    sign_in(@coach)
+    visit attendances_path
+    select @player.name, from: "Player"
+    click_on "Apply"
+
+    assert_selector "button", text: "Swap"
+    click_on "Swap", match: :first
+    assert_text "Attendance updated successfully."
+  end
+end

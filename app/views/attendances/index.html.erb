@@ -52,7 +52,10 @@
                       <div class="status">–</div>
                     <% end %>
                     <% if current_user.coach? %>
-                      <%= link_to "Toggle", toggle_attendances_path(date: day, player_id: @selected_player.id), method: :patch, class: "toggle-link" %>
+                      <%= button_to "Toggle", toggle_attendances_path(date: day, player_id: @selected_player.id), method: :patch,
+                                    form: { style: "display: inline-block;" },
+                                    class: "toggle-link",
+                                    style: "font-size: 0.8em; padding: 2px 5px;" %>
                     <% end %>
                   <% end %>
                 </td>

@@ -3,11 +3,40 @@ require "application_system_test_case"
 class AttendanceRecordsTest < ApplicationSystemTestCase
   setup do
     @attendance_record = attendance_records(:one)
+    # create coach user for toggling actions
+    @coach = User.create!(name: "Coach", email: "coach_records@example.com", password: "password", role: 1, coach: true)
+  end
+
+  def sign_in(user)
+    visit new_session_path
+    fill_in "Email", with: user.email
+    fill_in "Password", with: "password"
+    click_on "Log in"
   end
 
   test "visiting the index" do
     visit attendance_records_url
     assert_selector "h1", text: "Attendance records"
+  end
+
+  test "coach can toggle attendance record" do
+    sign_in(@coach)
+
+    visit attendance_records_url
+    record_div_id = "attendance_record_#{@attendance_record.id}"
+    record_text = find("div##{record_div_id} p:nth-of-type(3)").text
+    assert_match(/Is present: (true|false)/, record_text)
+    initial = record_text.include?("true")
+
+    # click the toggle button for that record
+    within("div##{record_div_id}") do
+      click_on "Toggle"
+    end
+
+    # expect flash notice and boolean flipped
+    assert_text "Attendance toggled successfully."
+    updated_text = find("div##{record_div_id} p:nth-of-type(3)").text
+    assert_equal(!initial, updated_text.include?("true"))
   end
 
   test "should create attendance record" do
