@@ -9,6 +9,13 @@ class AttendancesController < ApplicationController
     @color_profile = params[:color_profile].presence_in(COLOR_PROFILES) || "red_green_safe"
     @selected_date = parse_date(params[:date])
 
+    @workout_month = params[:workout_month].present? ? Date.parse(params[:workout_month]) : Time.zone.today
+
+    @workout_checkins = WorkoutCheckin.where(
+        player: current_user, 
+        workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month
+    ).order(workout_date: :desc)
+
     # everyone can optionally pick a player to view; coaches and players alike
     @players = User.where(role: :player).order(:name)
     @selected_player = User.find_by(id: params[:player_id]) if params[:player_id].present?
@@ -24,7 +31,7 @@ class AttendancesController < ApplicationController
       @calendar_attendances = month_scope.index_by(&:date)
     end
 
-    @workout_checkins = current_user.coach == true ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
+    @workout_checkins = current_user.coach? ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
   end
 
   def toggle
