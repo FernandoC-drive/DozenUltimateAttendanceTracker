@@ -15,8 +15,8 @@ class SessionsController < ApplicationController
       # already true, make sure the boolean is set. this covers situations
       # where the enum and the toggle flag may get out of sync (tests were
       # occasionally hitting a case where `role` wasn't exactly "coach").
-      if user.role == "coach" || user.coach == true
-        user.update(coach: true) unless user.coach?
+      if user.role == "coach"
+        user.coach! unless user.coach?
       end
 
       redirect_to root_path, notice: "Signed in successfully."
