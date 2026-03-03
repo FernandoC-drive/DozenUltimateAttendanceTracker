@@ -24,7 +24,7 @@ class AttendancesController < ApplicationController
     # picked anyone explicitly we default to the first player so that the
     # calendar/swap buttons are always rendered. (non‑coach users keep the
     # behaviour of showing every record when the selector is blank.)
-    if current_user.coach == true && @selected_player.nil? && @players.any?
+    if current_user.coach? && @selected_player.nil? && @players.any?
       @selected_player = @players.first
     end
     # players and coaches can still explicitly leave the selector blank if they
@@ -56,7 +56,7 @@ class AttendancesController < ApplicationController
     # use the boolean `coach` column rather than enum, since the latter only
     # reflects the user's role and may remain `player` even when the coach view
     # flag has been toggled.
-    if current_user.coach == true
+    if current_user.coach?
       # flip the status, default to true when creating new record
       if @attendance.new_record?
         @attendance.attended = true

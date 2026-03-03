@@ -8,13 +8,12 @@ puts "Seeding fixed accounts..."
 coach = User.find_or_create_by!(email: "coach@example.com") do |u|
   u.name = "Default Coach"
   u.role = :coach
-  u.coach = true
   u.password = "password"
 end
 
 player = User.find_or_create_by!(email: "player@example.com") do |u|
   u.name = "Default Player"
-  u.coach = false
+  u.role = :player
   u.password = "password"
 end
 
@@ -24,7 +23,7 @@ puts "Generating 10 random players with history..."
     name: Faker::Name.name,
     email: Faker::Internet.unique.email,
     password: "password123",
-    coach: false
+    role: :player
   )
   
   unique_attendance_dates = (0..30).to_a.sample(5).map { |d| d.days.ago.to_date }
