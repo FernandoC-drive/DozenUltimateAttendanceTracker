@@ -1,6 +1,6 @@
 <% content_for :title, "Attendance" %>
 
-<section class="card">
+<section class="card attendance-visualization palette-<%= @color_profile %>">
   <h2>Attendance</h2>
 
   <%= form_with url: attendances_path, method: :get, local: true, class: "toolbar" do |f| %>
@@ -12,19 +12,38 @@
 
     <%= f.label :view, "View" %>
     <%= f.select :view, [["Daily", "daily"], ["Weekly", "weekly"], ["Monthly", "monthly"], ["Calendar", "calendar"]], selected: @view_mode %>
+
+    <%= f.label :color_profile, "Color profile" %>
+    <%= f.select :color_profile,
+                 [["Standard", "default"],
+                  ["Red-Green Friendly", "red_green_safe"],
+                  ["Blue-Yellow Friendly", "tritanopia_safe"],
+                  ["High Contrast Monochrome", "monochrome"]],
+                 selected: @color_profile %>
     <%= f.submit "Apply" %>
   <% end %>
-
 
   <% if @selected_player %>
     <div class="attendance-summary">
       <strong><%= @selected_player.name %> attendance for <%= @selected_date.strftime('%B %Y') %></strong>
-      <div class="progress-container" title="<%= @percent_attended %>%">
-        <div class="progress-fill" style="width: <%= @percent_attended %>%;"></div>
+      <div class="progress-container" title="Monthly attendance: <%= @percent_attended %>%">
+        <div class="progress-fill" style="width: <%= @percent_attended %>%;" aria-label="Monthly attendance progress: <%= @percent_attended %>%"></div>
       </div>
       <p><%= @percent_attended %>% of days attended this month</p>
     </div>
   <% end %>
+
+  <div class="heat-legend" aria-label="Attendance heatmap legend">
+    <strong>Heatmap legend:</strong>
+    <span class="legend-item">
+      <span class="legend-swatch heat-0" aria-hidden="true"></span>
+      <span>No attendance recorded</span>
+    </span>
+    <span class="legend-item">
+      <span class="legend-swatch heat-1" aria-hidden="true"></span>
+      <span>Attendance recorded</span>
+    </span>
+  </div>
 
   <% if @view_mode == "calendar" %>
     <% if @selected_player %>
@@ -47,12 +66,28 @@
                     <div class="day-number"><%= day.day %></div>
                     <% attendance = @calendar_attendances[day] %>
                     <% if attendance %>
-                      <div class="status"><%= attendance.attended ? '✔️' : '✘' %></div>
+                      <% if attendance.attended %>
+                        <div class="status status-pill present" title="Present on <%= day %>" aria-label="Present on <%= day %>">
+                          <span class="status-icon" aria-hidden="true">P</span>
+                          <span class="status-text">Present</span>
+                        </div>
+                      <% else %>
+                        <div class="status status-pill absent" title="Absent on <%= day %>" aria-label="Absent on <%= day %>">
+                          <span class="status-icon" aria-hidden="true">A</span>
+                          <span class="status-text">Absent</span>
+                        </div>
+                      <% end %>
                     <% else %>
-                      <div class="status">–</div>
+                      <div class="status status-pill no-data" title="No attendance entry for <%= day %>" aria-label="No attendance entry for <%= day %>">
+                        <span class="status-icon" aria-hidden="true">N</span>
+                        <span class="status-text">No data</span>
+                      </div>
                     <% end %>
                     <% if current_user.coach? %>
-                      <%= link_to "Toggle", toggle_attendances_path(date: day, player_id: @selected_player.id), method: :patch, class: "toggle-link" %>
+                      <%= link_to "Toggle",
+                                  toggle_attendances_path(date: day, player_id: @selected_player.id, color_profile: @color_profile, view: @view_mode),
+                                  method: :patch,
+                                  class: "toggle-link" %>
                     <% end %>
                   <% end %>
                 </td>
@@ -77,16 +112,20 @@
       </thead>
       <tbody>
         <% @attendances.each do |attendance| %>
-          <tr class="heat-<%= attendance.heat_level %>">
+          <% is_present = attendance.attended %>
+          <tr class="heat-<%= attendance.heat_level %>" title="<%= is_present ? "Present" : "Absent" %> on <%= attendance.date %>">
             <td><%= attendance.player.name %></td>
             <td><%= attendance.date %></td>
             <td><%= attendance.days_attended %></td>
             <td style="display: flex; align-items: center; gap: 10px;">
-              <span><%= attendance.attended ? "Present" : "Absent" %></span>
+              <span class="status-pill <%= is_present ? "present" : "absent" %>" title="<%= is_present ? "Present" : "Absent" %> status" aria-label="<%= is_present ? "Present" : "Absent" %> status">
+                <span class="status-icon" aria-hidden="true"><%= is_present ? "P" : "A" %></span>
+                <span><%= is_present ? "Present" : "Absent" %></span>
+              </span>
 
               <% if current_user.coach? %>
-                <%= button_to "Swap", 
-                              toggle_attendance_path(attendance), 
+                <%= button_to "Swap",
+                              toggle_attendance_path(attendance, color_profile: @color_profile, view: @view_mode),
                               method: :patch,
                               form: { style: "display: inline-block; margin: 0;" },
                               style: "font-size: 0.8em; padding: 2px 5px;" %>

@@ -24,6 +24,12 @@ RSpec.describe AttendancesController, type: :controller do
         get :index
         expect(response).to have_http_status(:success)
         expect(assigns(:view_mode)).to eq("monthly")
+        expect(assigns(:color_profile)).to eq("red_green_safe")
+      end
+
+      it "accepts a valid color profile param" do
+        get :index, params: { color_profile: "tritanopia_safe" }
+        expect(assigns(:color_profile)).to eq("tritanopia_safe")
       end
 
       it "filters by daily view with a specific date" do

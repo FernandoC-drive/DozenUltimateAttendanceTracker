@@ -23,17 +23,22 @@ services:
     entrypoint:
       - /bin/bash
       - -lc
+      - bundle install && bundle exec rails db:prepare && exec bundle exec rails server -b 0.0.0.0 -p 3000
     volumes:
       - .:/app
     ports:
       - "3000:3000"
     environment:
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: d_uattendandance_development
+      DATABASE_TEST_NAME: d_uattendandance_test
       DATABASE_URL: postgres://postgres:postgres@db:5432/d_uattendandance_development
       RAILS_ENV: development
     depends_on:
       db:
         condition: service_healthy
-    command: "bundle install && bundle exec rails db:prepare && exec bundle exec rails server -b 0.0.0.0 -p 3000"
-
 volumes:
   pgdata:

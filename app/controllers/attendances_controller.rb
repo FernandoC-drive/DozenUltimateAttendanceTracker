@@ -2,9 +2,11 @@ class AttendancesController < ApplicationController
   before_action :require_login!
 
   VIEW_MODES = %w[daily weekly monthly calendar].freeze
+  COLOR_PROFILES = %w[default red_green_safe tritanopia_safe monochrome].freeze
 
   def index
     @view_mode = params[:view].presence_in(VIEW_MODES) || "monthly"
+    @color_profile = params[:color_profile].presence_in(COLOR_PROFILES) || "red_green_safe"
     @selected_date = parse_date(params[:date])
 
     @workout_month = params[:workout_month].present? ? Date.parse(params[:workout_month]) : Time.zone.today
