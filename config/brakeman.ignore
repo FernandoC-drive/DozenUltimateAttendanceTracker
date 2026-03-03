@@ -1,0 +1,39 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "4cbe624becd84b120eccb37db709f2533b5cd20e9be60dbedcdb71ede16a5731",
+      "check_name": "LinkToHref",
+      "message": "Potentially unsafe model attribute in `link_to` href",
+      "file": "app/views/attendances/index.html.erb",
+      "line": 91,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to(\"View Proof\", (Unresolved Model).new.proof_url, :target => \"_blank\", :rel => \"noreferrer\", :class => \"proof-link\")",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "AttendancesController",
+          "method": "index",
+          "line": 14,
+          "file": "app/controllers/attendances_controller.rb",
+          "rendered": {
+            "name": "attendances/index",
+            "file": "app/views/attendances/index.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "attendances/index"
+      },
+      "user_input": "(Unresolved Model).new.proof_url",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": ""
+    }
+  ],
+  "brakeman_version": "8.0.4"
+}
