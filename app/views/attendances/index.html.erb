@@ -83,11 +83,19 @@
                         <span class="status-text">No data</span>
                       </div>
                     <% end %>
+<<<<<<< new_ui
+                    <% if current_user.coach == true %>
+                      <%= button_to "Toggle", toggle_attendances_path(date: day, player_id: @selected_player.id), method: :patch,
+                                    form: { style: "display: inline-block;" },
+                                    class: "toggle-link",
+                                    style: "font-size: 0.8em; padding: 2px 5px;" %>
+=======
                     <% if current_user.coach? %>
                       <%= link_to "Toggle",
                                   toggle_attendances_path(date: day, player_id: @selected_player.id, color_profile: @color_profile, view: @view_mode),
                                   method: :patch,
                                   class: "toggle-link" %>
+>>>>>>> test
                     <% end %>
                   <% end %>
                 </td>

@@ -7,6 +7,7 @@ puts "Seeding fixed accounts..."
 
 coach = User.find_or_create_by!(email: "coach@example.com") do |u|
   u.name = "Default Coach"
+  u.role = :coach
   u.coach = true
   u.password = "password"
 end

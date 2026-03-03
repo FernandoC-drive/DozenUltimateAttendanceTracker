@@ -1,12 +1,19 @@
 {
   "RSpec": {
     "coverage": {
-      "/csce431/app/controllers/attendances_controller.rb": {
+      "/app/app/controllers/attendances_controller.rb": {
         "lines": [
           1,
           1,
           null,
           1,
+<<<<<<< new_ui
+          null,
+          1,
+          10,
+          10,
+          null,
+=======
           1,
           null,
           1,
@@ -37,8 +44,14 @@
           null,
           null,
           15,
+>>>>>>> test
           null,
+          10,
+          10,
           null,
+<<<<<<< new_ui
+          null,
+=======
           1,
           3,
           2,
@@ -47,17 +60,34 @@
           1,
           1,
           1,
+>>>>>>> test
           null,
           null,
           3,
           null,
+<<<<<<< new_ui
+          10,
+          2,
+          null,
+=======
           2,
           1,
           1,
           1,
+>>>>>>> test
           null,
-          1,
           null,
+<<<<<<< new_ui
+          null,
+          10,
+          10,
+          10,
+          null,
+          10,
+          4,
+          4,
+          4,
+=======
           null,
           2,
           null,
@@ -83,142 +113,180 @@
           null,
           12,
           null,
+>>>>>>> test
           null,
-          null
-        ]
-      },
-      "/csce431/app/controllers/application_controller.rb": {
-        "lines": [
-          1,
-          1,
+          null,
+          10,
           null,
           null,
           1,
+<<<<<<< new_ui
+          3,
+          2,
+=======
           84,
+>>>>>>> test
+          null,
           null,
           1,
-          null,
           1,
+          1,
+          null,
+          null,
+          null,
+          null,
+          null,
+          3,
+          null,
+          2,
+          1,
+<<<<<<< new_ui
+=======
           24,
           null
         ]
       },
       "/csce431/app/controllers/roles_controller.rb": {
         "lines": [
+>>>>>>> test
           1,
           1,
           null,
           1,
+          null,
           null,
           2,
-          1,
-          1,
           null,
           1,
           null,
           null,
           null,
           1,
+          null,
           1,
+          11,
+          null,
+          9,
+          null,
+          null,
           1,
+          10,
+          null,
+          1,
+          null,
+          1,
+          null,
+          null,
+          8,
+          null,
           null
         ]
       },
-      "/csce431/app/controllers/sessions_controller.rb": {
+      "/app/app/controllers/application_controller.rb": {
+        "lines": [
+          1,
+          1,
+          null,
+          null,
+          1,
+          46,
+          null,
+          1,
+          null,
+          1,
+          14,
+          null
+        ]
+      },
+      "/app/app/controllers/sessions_controller.rb": {
         "lines": [
           1,
           1,
           null,
           1,
+          3,
+          null,
+          3,
           2,
           null,
-          2,
-          1,
-          1,
-          null,
-          1,
-          1,
           null,
           null,
           null,
+          null,
+<<<<<<< new_ui
+          2,
+=======
+          0,
+          0,
+          null,
+>>>>>>> test
+          null,
           1,
+          null,
+          null,
+<<<<<<< new_ui
           2,
+          null,
+=======
+          1,
+          null,
+          null,
           2,
+          null,
+          null,
+          null,
+          null,
+          null,
           2,
+>>>>>>> test
+          1,
+          1,
+          null,
+          null,
+          null,
+          1,
+<<<<<<< new_ui
+=======
+          null,
+          null,
+>>>>>>> test
+          1,
+          1,
+          1,
           null,
           null
         ]
       },
-      "/csce431/app/controllers/users/omniauth_callbacks_controller.rb": {
+      "/app/app/models/user.rb": {
         "lines": [
           1,
           1,
-          4,
           null,
-          4,
+          1,
           null,
+          1,
+<<<<<<< new_ui
+          1,
           null,
+          1,
+          1,
           null,
+          1,
           null,
+          1,
+          0,
+          0,
+          0,
           null,
-          null,
-          4,
-          2,
-          2,
-          2,
+          0,
           null,
           0,
           0,
           null,
           null,
-          null,
-          1,
-          1,
-          1,
-          null,
-          1,
-          2,
-          null
-        ]
-      },
-      "/csce431/app/controllers/workout_checkins_controller.rb": {
-        "lines": [
-          1,
-          1,
-          null,
-          1,
-          null,
-          null,
-          2,
-          null,
-          null,
-          null,
-          null,
-          null,
-          2,
-          1,
-          null,
-          1,
-          null,
-          null,
-          null,
-          1,
-          null,
-          null,
-          1,
-          4,
-          null,
-          null
-        ]
-      },
-      "/csce431/app/models/attendance.rb": {
-        "lines": [
-          1,
-          1,
-          null,
-          1,
-          null,
-          1,
+          0,
+          0,
+=======
           1,
           1,
           null,
@@ -247,50 +315,65 @@
           1,
           null,
           2,
+>>>>>>> test
           null,
           null
         ]
       },
-      "/csce431/app/models/application_record.rb": {
+      "/app/app/models/application_record.rb": {
         "lines": [
           1,
           1,
           null
         ]
       },
-      "/csce431/app/models/user.rb": {
+      "/app/app/models/attendance.rb": {
         "lines": [
           1,
           1,
           null,
           1,
           null,
+<<<<<<< new_ui
+          1,
+=======
+>>>>>>> test
           1,
           1,
           null,
           1,
           1,
+          1,
+          null,
+          0,
+          null,
+          null,
+          null,
+          2,
+          1,
+          1,
+          1,
+          null,
+          17,
+          null,
+          null,
+          1,
+          4,
+          4,
+          4,
+          null,
+          4,
+          4,
+          null,
           null,
           1,
           null,
-          1,
-          4,
-          4,
-          4,
-          null,
-          4,
-          null,
-          4,
-          3,
-          null,
-          null,
-          4,
-          4,
+          0,
           null,
           null
         ]
       },
-      "/csce431/app/models/workout_checkin.rb": {
+      "/app/app/models/workout_checkin.rb": {
         "lines": [
           1,
           1,
@@ -317,8 +400,93 @@
           6,
           null
         ]
+      },
+      "/app/app/controllers/roles_controller.rb": {
+        "lines": [
+          0,
+          0,
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "branches": {}
+      },
+      "/app/app/controllers/users/omniauth_callbacks_controller.rb": {
+        "lines": [
+          0,
+          0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "branches": {}
+      },
+      "/app/app/controllers/workout_checkins_controller.rb": {
+        "lines": [
+          0,
+          0,
+          null,
+          0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ],
+        "branches": {}
       }
     },
+<<<<<<< new_ui
+    "timestamp": 1772503633
+=======
     "timestamp": 1772499859
+>>>>>>> test
   }
 }

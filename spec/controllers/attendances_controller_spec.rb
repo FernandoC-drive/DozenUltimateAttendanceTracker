@@ -103,9 +103,13 @@ RSpec.describe AttendancesController, type: :controller do
         expect(assigns(:calendar_attendances)).to be_a(Hash)
       end
 
-      it "prompts for player when calendar view without one" do
+      it "defaults to the first player when no selection is made" do
+        # create a couple of players so the default has something to pick
+        p1 = User.create!(email: 'first@tamu.edu', name: 'AAA', password: 'password', role: :player)
+        p2 = User.create!(email: 'second@tamu.edu', name: 'BBB', password: 'password', role: :player)
+
         get :index, params: { view: 'calendar' }
-        expect(assigns(:selected_player)).to be_nil
+        expect(assigns(:selected_player)).to eq(User.where(role: :player).order(:name).first)
       end
 
 
