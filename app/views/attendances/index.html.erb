@@ -35,14 +35,11 @@
 
   <div class="heat-legend" aria-label="Attendance heatmap legend">
     <strong>Heatmap legend:</strong>
-    <span class="legend-item">
-      <span class="legend-swatch heat-0" aria-hidden="true"></span>
-      <span>No attendance recorded</span>
-    </span>
-    <span class="legend-item">
-      <span class="legend-swatch heat-1" aria-hidden="true"></span>
-      <span>Attendance recorded</span>
-    </span>
+    <span class="legend-item"><span class="legend-swatch heat-0" aria-hidden="true"></span><span>0% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-1" aria-hidden="true"></span><span>1-24% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-2" aria-hidden="true"></span><span>25-49% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-3" aria-hidden="true"></span><span>50-74% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-4" aria-hidden="true"></span><span>75-100% attendance</span></span>
   </div>
 
   <% if @view_mode == "calendar" %>
@@ -113,10 +110,28 @@
           <% (first..last).to_a.in_groups_of(7, nil) do |week| %>
             <tr>
               <% week.each do |day| %>
-                <td class="<%= 'other-month' if day && day.month != @selected_date.month %>">
+                <% day_class = "" %>
+                <% if day %>
+                  <% count = @attendance_counts_by_day[day] || 0 %>
+                  <% pct = @players.any? ? ((count.to_f / @players.count) * 100).round : 0 %>
+                  <% day_class = if pct == 0
+                                   "heat-0"
+                                 elsif pct < 25
+                                   "heat-1"
+                                 elsif pct < 50
+                                   "heat-2"
+                                 elsif pct < 75
+                                   "heat-3"
+                                 else
+                                   "heat-4"
+                                 end %>
+                <% else %>
+                  <% count = 0 %>
+                <% end %>
+
+                <td class="<%= ['other-month', day_class].compact.join(' ') if day %>">
                   <% if day %>
                     <div class="day-number"><%= day.day %></div>
-                    <% count = @attendance_counts_by_day[day] || 0 %>
                     <div class="attendance-count">
                       <strong><%= count %></strong>
                       <% if count > 0 %>
@@ -150,7 +165,14 @@
         <% @attendance_summary.each do |summary| %>
           <% total_attended += summary[:total_days_attended] %>
           <% total_possible += summary[:total_possible_days] %>
-          <tr>
+          <% heat_class = case summary[:percent_attended]
+                        when 0 then "heat-0"
+                        when 1..24 then "heat-1"
+                        when 25..49 then "heat-2"
+                        when 50..74 then "heat-3"
+                        else "heat-4"
+                        end %>
+          <tr class="<%= heat_class %>">
             <td><%= summary[:player].name %></td>
             <td><%= summary[:total_days_attended] %></td>
             <td><%= summary[:total_possible_days] %></td>
