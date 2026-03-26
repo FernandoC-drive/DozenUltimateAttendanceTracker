@@ -1,6 +1,8 @@
 module Admin
   class RecsportsController < BaseController
     skip_forgery_protection only: :browser_sync
+    skip_before_action :require_login!, only: :browser_sync
+    skip_before_action :require_coach!, only: :browser_sync
 
     def show
       @credential = RecsportsCredential.first_or_initialize(access_mode: :shared_credentials)

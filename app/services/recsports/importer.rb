@@ -22,7 +22,7 @@ module Recsports
 
           event.participants.destroy_all
 
-          event_payload.fetch("participants", []).each do |participant_payload|
+          deduplicated_participants(event_payload.fetch("participants", [])).each do |participant_payload|
             user = resolve_user(participant_payload)
             imported_rows << {
               user: user,
@@ -104,7 +104,7 @@ module Recsports
         "created_by_name" => payload["created_by_name"].presence,
         "created_by_email" => payload["created_by_email"].presence,
         "source_created_at" => parse_time(payload["source_created_at"]),
-        "participants" => participants
+        "participants" => deduplicated_participants(participants)
       }
     end
 
@@ -176,6 +176,30 @@ module Recsports
           notes: "Imported from RecSports events: #{rows.map { |row| row[:title] }.uniq.join(', ')}"
         )
       end
+    end
+
+    def deduplicated_participants(participants)
+      seen = {}
+
+      Array(participants).filter_map do |participant|
+        payload = participant.respond_to?(:stringify_keys) ? participant.stringify_keys : participant.to_h.transform_keys(&:to_s)
+        key = participant_dedup_key(payload)
+        next if key.blank? || seen[key]
+
+        seen[key] = true
+        payload
+      end
+    end
+
+    def participant_dedup_key(payload)
+      uin = payload["uin"].to_s.strip
+      return "uin:#{uin}" if uin.present?
+
+      first_name = payload["first_name"].to_s.strip.downcase
+      last_name = payload["last_name"].to_s.strip.downcase
+      return if first_name.blank? && last_name.blank?
+
+      "name:#{first_name}:#{last_name}"
     end
 
     def parse_time(value)
