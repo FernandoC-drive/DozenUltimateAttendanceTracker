@@ -2,6 +2,7 @@
 
 <section class="card">
   <h2>RecSports Access</h2>
+  <p>Set the Sport Clubs page URL where the Home Events table is available after login. For TAMU Microsoft sign-in and Duo, use <code>Browser assisted</code> mode and run the local sync script after completing login in the opened Chrome window.</p>
 
   <%= form_with model: @credential, url: admin_recsports_path, method: :patch do |f| %>
     <div class="field">
@@ -10,7 +11,7 @@
     </div>
 
     <div class="field">
-      <%= f.label :form_url, "Form/API URL" %>
+      <%= f.label :form_url, "Club or Home Events URL" %>
       <%= f.url_field :form_url %>
     </div>
 
@@ -38,7 +39,7 @@
 
   <%= form_with url: sync_now_admin_recsports_path, method: :post do |f| %>
     <div class="field">
-      <%= f.label :manual_payload, "Manual payload (JSON array, used in manual_upload mode)" %>
+      <%= f.label :manual_payload, "Manual payload (JSON object, used in manual_upload mode)" %>
       <%= f.text_area :manual_payload, rows: 8 %>
     </div>
     <%= f.submit "Sync now" %>
@@ -46,4 +47,44 @@
 
   <p><strong>Last checked:</strong> <%= @credential.last_checked_at || "Never" %></p>
   <p><strong>Last error:</strong> <%= @credential.last_error.presence || "None" %></p>
+</section>
+
+<section class="card">
+  <h2>Browser-Assisted Sync</h2>
+
+  <p>Use this mode when Sport Clubs requires Microsoft sign-in and Duo. Save the credential with access mode set to <code>Browser assisted</code>, then run the local script from the project root on your machine:</p>
+
+  <pre><code>set RECSPORTS_BROWSER_TOKEN=<%= @credential.browser_sync_token %>
+bundle exec ruby script/recsports_browser_sync.rb</code></pre>
+
+  <p>The script opens Chrome, waits for you to complete Microsoft and Duo login, scrapes the Home Events practice pages, and posts the imported roster snapshot back into this Rails app.</p>
+</section>
+
+<section class="card">
+  <h2>Latest Imported Events</h2>
+
+  <% if @recent_events.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>When</th>
+          <th>Venue</th>
+          <th>Participants</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_events.each do |event| %>
+          <tr>
+            <td><%= event.title %></td>
+            <td><%= event.starts_at&.strftime("%Y-%m-%d %I:%M%P") || "Unknown" %></td>
+            <td><%= event.venue.presence || "Unknown" %></td>
+            <td><%= event.participants.map { |participant| participant.user.name }.join(", ") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No Sport Clubs events have been imported yet.</p>
+  <% end %>
 </section>

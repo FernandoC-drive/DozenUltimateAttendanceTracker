@@ -19,6 +19,7 @@ class AttendancesController < ApplicationController
     # everyone can optionally pick a player to view; coaches and players alike
     @players = User.where(role: :player).order(:name)
     @selected_player = User.find_by(id: params[:player_id]) if params[:player_id].present?
+    @recent_recsports_events = RecsportsEvent.includes(participants: :user).recent_first.limit(5)
 
     # coaches generally want to toggle someone’s attendance; if they haven’t
     # picked anyone explicitly we default to the first player so that the
@@ -40,7 +41,11 @@ class AttendancesController < ApplicationController
       @calendar_attendances = month_scope.index_by(&:date)
     end
 
-    @workout_checkins = current_user.coach? ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
+    @workout_checkins = if current_user.coach?
+      WorkoutCheckin.none
+    else
+      current_user.workout_checkins.where(workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month)
+    end
   end
 
   def toggle
