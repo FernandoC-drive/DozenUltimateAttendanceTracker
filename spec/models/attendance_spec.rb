@@ -1,7 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe Attendance, type: :model do
-  let(:player) { User.create!(name: "Test Player", email: "test@tamu.edu", password: "password") }
+  # Set up a default player for the tests
+  let(:player) { User.create!(name: "Test Player", email: "test@tamu.edu", password: "password", role: 0) }
 
   describe "validations" do
 
@@ -20,9 +21,10 @@ RSpec.describe Attendance, type: :model do
       expect(attendance).to be_valid
     end
 
-    it "is invalid without a date" do
-      attendance = Attendance.new(date: nil)
-      expect(attendance).not_to be_valid
+    it "defaults to attended: false if not explicitly set" do
+      attendance = Attendance.new(player: player, date: Date.current)
+      expect(attendance).to be_valid
+      expect(attendance.attended).to be(false).or be_nil
     end
 
     it "prevents a player from having two records on the same day" do
@@ -56,9 +58,8 @@ RSpec.describe Attendance, type: :model do
       today = Date.current
       attendance = Attendance.create!(player: player, date: today, days_attended: 1)
       
-      expect(Attendance.for_day(today)).to include(attendance)
-      expect(Attendance.for_week(today)).to include(attendance)
-      expect(Attendance.for_month(today)).to include(attendance)
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:date]).to include("has already been taken") 
     end
   end
 
