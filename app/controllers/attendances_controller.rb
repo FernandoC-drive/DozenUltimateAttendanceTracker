@@ -9,13 +9,6 @@ class AttendancesController < ApplicationController
     @color_profile = params[:color_profile].presence_in(COLOR_PROFILES) || "red_green_safe"
     @selected_date = parse_date(params[:date])
 
-    @workout_month = params[:workout_month].present? ? Date.parse(params[:workout_month]) : Time.zone.today
-
-    @workout_checkins = WorkoutCheckin.where(
-        player: current_user, 
-        workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month
-    ).order(workout_date: :desc)
-
     # everyone can optionally pick a player to view; coaches and players alike
     @players = User.where(role: :player).order(:name)
     @selected_player = User.find_by(id: params[:player_id]) if params[:player_id].present?
@@ -24,7 +17,7 @@ class AttendancesController < ApplicationController
     # picked anyone explicitly we default to the first player so that the
     # calendar/swap buttons are always rendered. (non‑coach users keep the
     # behaviour of showing every record when the selector is blank.)
-    if current_user.coach == true && @selected_player.nil? && @players.any?
+    if current_user.coach? && @selected_player.nil? && @players.any?
       @selected_player = @players.first
     end
     # players and coaches can still explicitly leave the selector blank if they
@@ -47,7 +40,22 @@ class AttendancesController < ApplicationController
       @attendance_counts_by_day = calculate_attendance_counts_by_day
     end
 
-    @workout_checkins = current_user.coach? ? WorkoutCheckin.none : current_user.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
+    @workout_month = if params[:workout_month].present?
+                       Date.parse(params[:workout_month])
+                     else
+                       Date.today
+                     end
+
+    @workout_checkins = if @selected_player
+                          # When viewing a specific player, show their workout checkins
+                          @selected_player.workout_checkins.where(workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month)
+                        elsif current_user.coach?
+                          # Coaches don't see workout checkins
+                          WorkoutCheckin.none
+                        else
+                          # Current user viewing all players sees their own workout checkins
+                          current_user.workout_checkins.where(workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month)
+                        end
   end
 
   def toggle
@@ -60,10 +68,8 @@ class AttendancesController < ApplicationController
       @attendance = Attendance.find_or_initialize_by(player: player, date: date)
     end
 
-    # use the boolean `coach` column rather than enum, since the latter only
-    # reflects the user's role and may remain `player` even when the coach view
-    # flag has been toggled.
-    if current_user.coach == true
+    # use the role enum to check if user is a coach
+    if current_user.coach?
       # flip the status, default to true when creating new record
       if @attendance.new_record?
         @attendance.attended = true
@@ -110,20 +116,20 @@ class AttendancesController < ApplicationController
                    # monthly and calendar
                    @selected_date.beginning_of_month..@selected_date.end_of_month
                  end
-    
+
     # Filter to only Monday (1), Wednesday (3), and Friday (5)
     mwf_dates = (date_range.begin..date_range.end).select { |d| [1, 3, 5].include?(d.wday) }
-    
+
     # Get all players in the system (or just the selected player if one is chosen)
     players_to_query = @selected_player ? [@selected_player] : User.where(role: :player).order(:name)
-    
+
     # Build summary for each player with attendance within the date range (M/W/F only)
     summary = players_to_query.map do |player|
       attendance_records = Attendance.where(player: player, date: mwf_dates)
       total_days_attended = attendance_records.where("days_attended > 0").sum(:days_attended)
       total_possible_days = mwf_dates.count
       percent = total_possible_days > 0 ? ((total_days_attended.to_f / total_possible_days) * 100).round(1) : 0.0
-      
+
       {
         player: player,
         total_days_attended: total_days_attended,
@@ -131,7 +137,7 @@ class AttendancesController < ApplicationController
         percent_attended: percent
       }
     end
-    
+
     summary
   end
 

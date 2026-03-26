@@ -1,20 +1,20 @@
 puts "Cleaning up old records..."
 WorkoutCheckin.destroy_all
+WeeklyWorkout.destroy_all
 Attendance.destroy_all
-User.where(uid: nil).destroy_all 
+User.where(uid: nil).destroy_all
 
 puts "Seeding fixed accounts..."
 
 coach = User.find_or_create_by!(email: "coach@example.com") do |u|
   u.name = "Default Coach"
   u.role = :coach
-  u.coach = true
   u.password = "password"
 end
 
 player = User.find_or_create_by!(email: "player@example.com") do |u|
   u.name = "Default Player"
-  u.coach = false
+  u.role = :player
   u.password = "password"
 end
 
@@ -24,10 +24,13 @@ puts "Generating 10 random players with history..."
     name: Faker::Name.name,
     email: Faker::Internet.unique.email,
     password: "password123",
-    coach: false
+    role: :player
   )
   
-  unique_attendance_dates = (0..30).to_a.sample(5).map { |d| d.days.ago.to_date }
+  # Generate random dates within the last 30 days, but only Monday, Wednesday, Friday
+  all_dates = (0..30).to_a.map { |d| d.days.ago.to_date }
+  mwf_dates = all_dates.select { |date| [1, 3, 5].include?(date.wday) } # Monday=1, Wednesday=3, Friday=5
+  unique_attendance_dates = mwf_dates.sample(5)
 
   unique_attendance_dates.each do |rand_date|
     attended_flag = [true, false].sample

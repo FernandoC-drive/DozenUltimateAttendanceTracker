@@ -16,7 +16,6 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :attendances, only: :index
   resources :workout_checkins, only: [:create]
 
   resources :attendance_records do

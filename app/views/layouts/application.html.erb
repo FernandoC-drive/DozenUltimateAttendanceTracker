@@ -22,7 +22,7 @@
       <h1>Team Attendance Dashboard</h1>
       <% if current_user %>
         <nav>
-          <% if current_user.coach == true %>
+          <% if current_user.coach? %>
             <%= button_to "View as Player", toggle_coach_path, method: :delete, class: "link-button" %>
           <% else %>
             <%= form_with url: toggle_coach_path, method: :post, local: true, style: "display: inline-block; margin: 0 10px;" do |f| %>
