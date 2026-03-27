@@ -15,9 +15,10 @@
 4. Copy the `Browser Sync Token`.
 5. In Chrome, open the authenticated TAMU Sport Clubs `Home Events` page.
 6. Open the extension popup.
-7. Enter:
+7. Optionally click `Detect From Open App Tab` if the attendance app's `RecSports Sync` page is already open in another tab.
+8. Otherwise enter:
    - your attendance app URL
    - the browser sync token
-8. Click `Sync Current Tab`.
+9. Click `Sync Current Tab`.
 
-The extension scrapes the current authenticated Sport Clubs page, follows each `View` link, and posts the roster snapshot to the Rails app.
+The popup will show progress as it scrapes each event page. The extension scrapes the current authenticated Sport Clubs page, follows each `View` link, and posts the roster snapshot to the Rails app.

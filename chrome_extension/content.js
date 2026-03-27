@@ -19,7 +19,22 @@ function labeledValue(text, label, terminators = []) {
 }
 
 function parseTime(value) {
-  return value ? value : null;
+  const normalized = normalizeText(value);
+  if (!normalized) {
+    return null;
+  }
+
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    return normalized;
+  }
+
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  const hours = String(parsed.getHours()).padStart(2, "0");
+  const minutes = String(parsed.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
 function parseDatetimeRange(value) {
@@ -27,8 +42,19 @@ function parseDatetimeRange(value) {
     return [null, null];
   }
 
-  const parts = value.split(/\s+to\s+/i);
-  return [parseTime(parts[0]), parseTime(parts[1])];
+  const parts = normalizeText(value).split(/\s+to\s+/i);
+  const startsAt = parseTime(parts[0]);
+  if (parts.length < 2) {
+    return [startsAt, null];
+  }
+
+  const endsAt = parseTime(parts[1]);
+  if (endsAt || !startsAt) {
+    return [startsAt, endsAt];
+  }
+
+  const startDate = startsAt.slice(0, 10);
+  return [startsAt, parseTime(`${startDate} ${parts[1]}`)];
 }
 
 function parseCreatedBy(value) {
@@ -134,6 +160,13 @@ async function fetchHtml(url) {
   return response.text();
 }
 
+function reportProgress(message) {
+  chrome.runtime.sendMessage({
+    type: "RECSPORTS_PROGRESS",
+    message
+  });
+}
+
 async function scrapeCurrentPage() {
   const currentDoc = document;
   const eventUrls = extractEventUrls(currentDoc, window.location.href);
@@ -141,8 +174,10 @@ async function scrapeCurrentPage() {
     throw new Error("No View links were found on the current page. Open the authenticated Home Events page first.");
   }
 
+  reportProgress(`Found ${eventUrls.length} event link(s). Starting scrape...`);
   const events = [];
-  for (const eventUrl of eventUrls) {
+  for (const [index, eventUrl] of eventUrls.entries()) {
+    reportProgress(`Scraping event ${index + 1} of ${eventUrls.length}...`);
     const html = await fetchHtml(eventUrl);
     const parsed = parseEventPage(html, eventUrl);
     if (parsed) {
@@ -154,6 +189,7 @@ async function scrapeCurrentPage() {
     throw new Error("No participant tables were found across the discovered event pages.");
   }
 
+  reportProgress(`Uploading ${events.length} scraped event(s) to the attendance app...`);
   return { events };
 }
 

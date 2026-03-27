@@ -5,6 +5,7 @@
   "description": "Scrape authenticated TAMU Sport Clubs event rosters and sync them into the attendance app.",
   "permissions": [
     "activeTab",
+    "scripting",
     "storage",
     "tabs"
   ],

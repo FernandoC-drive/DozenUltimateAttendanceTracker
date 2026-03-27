@@ -13,10 +13,12 @@ module Recsports
 
       synced_at = Time.current
       affected_dates = []
-      imported_rows = []
 
       ActiveRecord::Base.transaction do
         events.each do |event_payload|
+          existing_event = RecsportsEvent.find_by(source_url: event_payload["source_url"])
+          affected_dates << existing_event.event_date if existing_event&.event_date.present?
+
           event = upsert_event(event_payload, synced_at)
           affected_dates << event.event_date if event.event_date.present?
 
@@ -24,11 +26,6 @@ module Recsports
 
           deduplicated_participants(event_payload.fetch("participants", [])).each do |participant_payload|
             user = resolve_user(participant_payload)
-            imported_rows << {
-              user: user,
-              date: event.event_date,
-              title: event.title
-            }
 
             event.participants.create!(
               user: user,
@@ -40,7 +37,7 @@ module Recsports
           end
         end
 
-        replace_attendance_rows!(imported_rows, affected_dates.compact.uniq)
+        replace_attendance_rows!(affected_dates.compact.uniq)
       end
     end
 
@@ -155,12 +152,12 @@ module Recsports
       end
     end
 
-    def replace_attendance_rows!(imported_rows, affected_dates)
+    def replace_attendance_rows!(affected_dates)
       return if affected_dates.empty?
 
       Attendance.recsports.where(date: affected_dates, override_by_leadership: false).delete_all
 
-      grouped_rows = imported_rows.group_by { |row| [row[:user].id, row[:date]] }
+      grouped_rows = attendance_rows_for_dates(affected_dates).group_by { |row| [row[:user].id, row[:date]] }
 
       grouped_rows.each_value do |rows|
         date = rows.first[:date]
@@ -176,6 +173,30 @@ module Recsports
           notes: "Imported from RecSports events: #{rows.map { |row| row[:title] }.uniq.join(', ')}"
         )
       end
+    end
+
+    def attendance_rows_for_dates(affected_dates)
+      recsports_events_for_dates(affected_dates).flat_map do |event|
+        event.participants.map do |participant|
+          next if event.event_date.blank?
+
+          {
+            user: participant.user,
+            date: event.event_date,
+            title: event.title
+          }
+        end
+      end.compact
+    end
+
+    def recsports_events_for_dates(affected_dates)
+      start_time = affected_dates.min.beginning_of_day
+      end_time = affected_dates.max.end_of_day
+
+      RecsportsEvent
+        .includes(participants: :user)
+        .where(starts_at: start_time..end_time)
+        .select { |event| affected_dates.include?(event.event_date) }
     end
 
     def deduplicated_participants(participants)
@@ -206,7 +227,11 @@ module Recsports
       return if value.blank?
       return value if value.is_a?(Time) || value.is_a?(ActiveSupport::TimeWithZone)
 
-      Time.zone.parse(value.to_s)
+      text = value.to_s.strip
+      normalized_us_datetime = parse_us_datetime(text)
+      return normalized_us_datetime if normalized_us_datetime
+
+      Time.zone.parse(text)
     rescue ArgumentError, TypeError
       nil
     end
@@ -215,8 +240,37 @@ module Recsports
       return if value.blank?
       return value if value.is_a?(Date)
 
-      Date.parse(value.to_s)
+      text = value.to_s.strip
+      us_datetime = parse_us_datetime(text)
+      return us_datetime.to_date if us_datetime
+
+      us_date = parse_us_date(text)
+      return us_date if us_date
+
+      Date.parse(text)
     rescue ArgumentError, TypeError
+      nil
+    end
+
+    def parse_us_datetime(value)
+      [
+        "%m/%d/%Y %l:%M %p",
+        "%m/%d/%Y %I:%M %p",
+        "%m/%d/%Y %H:%M",
+        "%m/%d/%Y"
+      ].each do |format|
+        parsed = Time.zone.strptime(value, format)
+        return parsed if parsed
+      rescue ArgumentError
+        next
+      end
+
+      nil
+    end
+
+    def parse_us_date(value)
+      Date.strptime(value, "%m/%d/%Y")
+    rescue ArgumentError
       nil
     end
   end
