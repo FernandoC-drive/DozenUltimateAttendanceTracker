@@ -68,22 +68,18 @@ https://sportclubs.tamu.edu/home/userClubs
 
 4. Set `Access mode` to `Browser assisted`.
 5. Save the settings.
-6. Copy the browser sync token shown on the page.
-7. In a new PowerShell window from the project root, run:
-
-```powershell
-$env:RECSPORTS_BROWSER_TOKEN="paste-token-here"
-bundle exec ruby script/recsports_browser_sync.rb
-```
-
-8. A real Chrome window will open.
-9. Complete TAMU Microsoft sign-in and Duo there.
-10. Once you are back on the Sport Clubs Home Events page, return to the terminal and press Enter.
+6. Copy the `Browser Sync Token` shown on the page.
+7. Load the unpacked Chrome extension from the repo's `chrome_extension` folder.
+8. In Chrome, sign in to TAMU Sport Clubs and open the authenticated `Home Events` page.
+9. Open the extension popup.
+10. Enter:
+    - your attendance app URL
+    - the browser sync token
+11. Click `Sync Current Tab`.
 
 What the sync does:
 
-- opens a real Chrome browser on your machine
-- lets you complete Microsoft sign-in and Duo manually
+- runs inside the user's authenticated Chrome session
 - discovers each `View` event page
 - scrapes the participants table
 - posts the imported snapshot back into the Rails app
@@ -98,8 +94,8 @@ Imported rosters appear on the main attendance dashboard under `Imported Practic
 3. Confirm the success flash says `Attendance updated successfully.`
 4. Enter `-1` or `abc` for attendance input and confirm validation blocks it.
 5. Open `RecSports Sync`, configure browser-assisted mode, and save the settings.
-6. Run `bundle exec ruby script/recsports_browser_sync.rb` with the sync token in a new terminal.
-7. Complete Microsoft sign-in and Duo in the opened Chrome window.
+6. Load the Chrome extension from the repo.
+7. Sign in to Sport Clubs, open Home Events, and run `Sync Current Tab` from the extension.
 8. Return to the dashboard and confirm imported rosters appear.
 9. Sign out and sign in as player.
 10. Confirm attendance still appears correctly on the player dashboard.

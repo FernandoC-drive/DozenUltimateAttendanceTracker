@@ -14,6 +14,8 @@ Rails.application.routes.draw do
       post :test_access
       post :sync_now
       post :browser_sync
+      match :browser_sync, via: :options
+      post :start_browser_sync
     end
   end
 

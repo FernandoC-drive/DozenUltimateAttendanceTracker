@@ -3,6 +3,7 @@ module Admin
     skip_forgery_protection only: :browser_sync
     skip_before_action :require_login!, only: :browser_sync
     skip_before_action :require_coach!, only: :browser_sync
+    before_action :set_browser_sync_headers, only: :browser_sync
 
     def show
       @credential = RecsportsCredential.first_or_initialize(access_mode: :shared_credentials)
@@ -63,6 +64,11 @@ module Admin
     end
 
     def browser_sync
+      if request.options?
+        head :ok
+        return
+      end
+
       credential = RecsportsCredential.find_by(browser_sync_token: params[:token].to_s)
       unless credential
         render json: { error: "Invalid browser sync token." }, status: :unauthorized
@@ -82,6 +88,28 @@ module Admin
       render json: { error: e.message }, status: :unprocessable_entity
     end
 
+    def start_browser_sync
+      credential = RecsportsCredential.first
+      if credential.blank?
+        redirect_to admin_recsports_path, alert: "Configure RecSports access first."
+        return
+      end
+
+      unless credential.browser_assisted?
+        redirect_to admin_recsports_path, alert: "Set RecSports access mode to Browser assisted first."
+        return
+      end
+
+      Recsports::BrowserSyncLauncher.new(
+        credential: credential,
+        app_url: request.base_url
+      ).call
+
+      redirect_to admin_recsports_path, notice: "Browser sync launched. A Chrome window should open on this machine. Complete Microsoft and Duo there, then return to the sync terminal window if prompted."
+    rescue StandardError => e
+      redirect_to admin_recsports_path, alert: e.message
+    end
+
     private
 
     def credential_params
@@ -91,10 +119,17 @@ module Admin
     def parse_snapshot(raw_snapshot)
       return {} if raw_snapshot.blank?
       return raw_snapshot if raw_snapshot.is_a?(Hash)
+      return raw_snapshot.to_unsafe_h if raw_snapshot.is_a?(ActionController::Parameters)
 
       JSON.parse(raw_snapshot)
     rescue JSON::ParserError
       {}
+    end
+
+    def set_browser_sync_headers
+      response.set_header("Access-Control-Allow-Origin", "*")
+      response.set_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+      response.set_header("Access-Control-Allow-Headers", "Content-Type")
     end
   end
 end

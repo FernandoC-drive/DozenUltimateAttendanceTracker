@@ -66,11 +66,73 @@ RSpec.describe Admin::RecsportsController, type: :controller do
       expect(User.find_by(recsports_uin: "535009099")).to be_present
     end
 
+    it "accepts JSON extension uploads and exposes CORS headers" do
+      credential = RecsportsCredential.create!(
+        form_url: "https://sportclubs.tamu.edu/home/userClubs",
+        access_mode: :browser_assisted
+      )
+
+      payload = {
+        token: credential.browser_sync_token,
+        snapshot: {
+          events: [
+            {
+              title: "Thursday Practice",
+              starts_at: "2025-08-28 20:00",
+              source_url: "https://sportclubs.tamu.edu/home/events/456",
+              participants: [
+                { first_name: "Aldrich", last_name: "Leow", uin: "732005379", position: 0 }
+              ]
+            }
+          ]
+        }
+      }
+
+      request.headers["Origin"] = "chrome-extension://example"
+      post :browser_sync, params: payload, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("*")
+      expect(RecsportsEvent.find_by(title: "Thursday Practice")).to be_present
+    end
+
     it "rejects an invalid browser sync token" do
       post :browser_sync, params: { token: "bad-token", snapshot: {}.to_json }
 
       expect(response).to have_http_status(:unauthorized)
       expect(JSON.parse(response.body)).to include("error" => "Invalid browser sync token.")
+    end
+  end
+
+  describe "OPTIONS #browser_sync" do
+    it "returns browser-sync CORS headers" do
+      request.headers["Origin"] = "chrome-extension://example"
+      process :browser_sync, method: :options
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("*")
+      expect(response.headers["Access-Control-Allow-Methods"]).to include("POST", "OPTIONS")
+    end
+  end
+
+  describe "POST #start_browser_sync" do
+    it "launches the browser sync process for browser-assisted mode" do
+      credential = RecsportsCredential.create!(
+        form_url: "https://sportclubs.tamu.edu",
+        access_mode: :browser_assisted
+      )
+
+      launcher = instance_double(Recsports::BrowserSyncLauncher, call: 1234)
+      allow(Recsports::BrowserSyncLauncher).to receive(:new).with(
+        credential: credential,
+        app_url: "http://test.host"
+      ).and_return(launcher)
+
+      post :start_browser_sync
+
+      expect(response).to redirect_to(admin_recsports_path)
+      expect(flash[:notice]).to include("Browser sync launched")
+      expect(launcher).to have_received(:call)
     end
   end
 end

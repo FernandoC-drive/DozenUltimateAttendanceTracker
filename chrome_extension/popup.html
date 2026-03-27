@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>RecSports Sync</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 16px;
+        width: 320px;
+        background: #faf7f2;
+        color: #222;
+      }
+
+      h1 {
+        font-size: 18px;
+        margin: 0 0 12px;
+      }
+
+      p {
+        font-size: 13px;
+        line-height: 1.4;
+        margin: 0 0 12px;
+      }
+
+      label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        margin: 12px 0 4px;
+      }
+
+      input, textarea, button {
+        width: 100%;
+        box-sizing: border-box;
+        font: inherit;
+      }
+
+      input {
+        padding: 8px;
+        border: 1px solid #c7c1b8;
+        border-radius: 6px;
+      }
+
+      button {
+        margin-top: 14px;
+        padding: 10px;
+        border: 0;
+        border-radius: 6px;
+        background: #6f0000;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: #d9d4cc;
+        color: #222;
+      }
+
+      .status {
+        margin-top: 12px;
+        font-size: 12px;
+        min-height: 18px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RecSports Sync</h1>
+    <p>Open the authenticated Sport Clubs Home Events page first, then run sync from this popup.</p>
+
+    <label for="appUrl">Attendance App URL</label>
+    <input id="appUrl" type="url" placeholder="https://your-app.example.com">
+
+    <label for="token">Browser Sync Token</label>
+    <input id="token" type="text" placeholder="Paste token from RecSports Sync page">
+
+    <button id="saveButton" class="secondary" type="button">Save Settings</button>
+    <button id="syncButton" type="button">Sync Current Tab</button>
+
+    <div id="status" class="status"></div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
