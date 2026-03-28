@@ -1,4 +1,13 @@
 class AttendancesController < ApplicationController
+  # Coach can toggle workout completion for a player/week
+  def toggle_workout_complete
+    # You may want to use your own auth logic here
+    player = User.find(params[:player_id])
+    week_start = Date.parse(params[:week_start])
+    weekly = WeeklyWorkout.find_or_create_by!(player: player, week_start_date: week_start)
+    weekly.update!(complete: !weekly.complete)
+    redirect_back(fallback_location: attendances_path, notice: "Workout completion updated.")
+  end
   before_action :require_login!
 
   VIEW_MODES = %w[daily weekly monthly calendar].freeze

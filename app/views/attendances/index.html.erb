@@ -157,6 +157,7 @@
           <th>Days Attended</th>
           <th>Total Possible Days</th>
           <th>Attendance %</th>
+          <th>Workout Complete (2/wk)</th>
         </tr>
       </thead>
       <tbody>
@@ -177,6 +178,20 @@
             <td><%= summary[:total_days_attended] %></td>
             <td><%= summary[:total_possible_days] %></td>
             <td><%= summary[:percent_attended] %>%</td>
+            <td>
+              <% week_start = @selected_date.beginning_of_week(:monday) %>
+              <% weekly = WeeklyWorkout.find_by(player: summary[:player], week_start_date: week_start) %>
+              <% completed = weekly&.complete || false %>
+              <% if current_user.coach? %>
+                <%= form_with url: toggle_workout_complete_attendances_path, method: :post, local: true, style: 'display:inline' do |f| %>
+                  <%= hidden_field_tag :player_id, summary[:player].id %>
+                  <%= hidden_field_tag :week_start, week_start %>
+                  <%= check_box_tag 'complete', '1', completed, onchange: 'this.form.submit();' %>
+                <% end %>
+              <% else %>
+                <%= completed ? '✅' : '❌' %>
+              <% end %>
+            </td>
           </tr>
         <% end %>
       </tbody>

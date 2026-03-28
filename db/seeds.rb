@@ -18,22 +18,24 @@ player = User.find_or_create_by!(email: "player@example.com") do |u|
   u.password = "password"
 end
 
-puts "Generating 10 random players with history..."
-10.times do
+puts "Generating 20 random players with history..."
+20.times do
   new_player = User.create!(
     name: Faker::Name.name,
     email: Faker::Internet.unique.email,
     password: "password123",
     role: :player
   )
-  
+
   # Generate random dates within the last 30 days, but only Monday, Wednesday, Friday
   all_dates = (0..30).to_a.map { |d| d.days.ago.to_date }
   mwf_dates = all_dates.select { |date| [1, 3, 5].include?(date.wday) } # Monday=1, Wednesday=3, Friday=5
-  unique_attendance_dates = mwf_dates.sample(5)
+  # For better coverage, use more dates per player
+  unique_attendance_dates = mwf_dates.sample(10)
 
   unique_attendance_dates.each do |rand_date|
-    attended_flag = [true, false].sample
+    # Bias toward attended being true for more heatmap color
+    attended_flag = rand < 0.7
     Attendance.create!(
       player_id: new_player.id,
       date: rand_date,
@@ -42,8 +44,8 @@ puts "Generating 10 random players with history..."
       source: 0
     )
   end
-  
-  unique_workout_offsets = (0..30).to_a.sample(rand(1..3))
+
+  unique_workout_offsets = (0..30).to_a.sample(rand(2..5))
   unique_workout_dates = unique_workout_offsets.map { |d| d.days.ago.to_date }
 
   unique_workout_dates.each do |rand_workout_date|
