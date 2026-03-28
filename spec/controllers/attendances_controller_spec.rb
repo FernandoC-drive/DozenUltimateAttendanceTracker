@@ -21,10 +21,18 @@ RSpec.describe AttendancesController, type: :controller do
       end
 
       it "loads the monthly view by default" do
+        RecsportsEvent.create!(
+          title: "Monday Practice",
+          source_url: "manual://practice-1",
+          starts_at: Time.zone.parse("2025-08-25 20:00"),
+          synced_at: Time.current
+        )
+
         get :index
         expect(response).to have_http_status(:success)
         expect(assigns(:view_mode)).to eq("monthly")
         expect(assigns(:color_profile)).to eq("red_green_safe")
+        expect(assigns(:recent_recsports_events).map(&:title)).to include("Monday Practice")
       end
 
       it "accepts a valid color profile param" do

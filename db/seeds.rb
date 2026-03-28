@@ -1,7 +1,11 @@
 puts "Cleaning up old records..."
+RecsportsEventParticipant.destroy_all if defined?(RecsportsEventParticipant)
+RecsportsEvent.destroy_all if defined?(RecsportsEvent)
+WeeklyWorkout.destroy_all
 WorkoutCheckin.destroy_all
 Attendance.destroy_all
-User.where(uid: nil).destroy_all 
+User.where(uid: nil).destroy_all
+Faker::Internet.unique.clear
 
 puts "Seeding fixed accounts..."
 
@@ -25,7 +29,7 @@ puts "Generating 10 random players with history..."
     password: "password123",
     role: :player
   )
-  
+
   unique_attendance_dates = (0..30).to_a.sample(5).map { |d| d.days.ago.to_date }
 
   unique_attendance_dates.each do |rand_date|
@@ -38,7 +42,7 @@ puts "Generating 10 random players with history..."
       source: 0
     )
   end
-  
+
   unique_workout_offsets = (0..30).to_a.sample(rand(1..3))
   unique_workout_dates = unique_workout_offsets.map { |d| d.days.ago.to_date }
 
@@ -57,5 +61,5 @@ RecsportsCredential.find_or_create_by!(form_url: "https://example.com/recsports_
   c.active = true
 end
 
-puts "✅ Seeds completed!"
+puts "Seeds completed!"
 puts "Login: coach@example.com / password"

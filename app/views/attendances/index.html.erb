@@ -139,6 +139,34 @@
   <% end %>
 </section>
 
+<section class="card">
+  <header class="card-header">
+    <h2>Imported Practice Rosters</h2>
+    <p>Latest participant lists scraped from the Sport Clubs event pages.</p>
+  </header>
+
+  <% if @recent_recsports_events.any? %>
+    <div class="workout-history">
+      <% @recent_recsports_events.each do |event| %>
+        <article class="history-item" style="display: block; margin-bottom: 16px;">
+          <strong><%= event.title %></strong>
+          <div>
+            <%= [event.starts_at&.strftime("%b %d, %Y %I:%M%P"), event.venue].compact.join(" at ") %>
+          </div>
+          <div>
+            <%= pluralize(event.participants.size, "participant") %>
+          </div>
+          <div>
+            <%= event.participants.map { |participant| participant.user.name }.join(", ") %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="empty-state">No imported Sport Clubs practice data yet.</p>
+  <% end %>
+</section>
+
 <% unless current_user.coach? %>
   <section class="card workout-card">
     <header class="card-header">
