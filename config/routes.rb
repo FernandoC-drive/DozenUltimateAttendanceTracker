@@ -19,7 +19,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :workout_checkins, only: [:create]
+  resources :workout_checkins, only: [:create, :destroy]
 
   resources :attendance_records do
     member do

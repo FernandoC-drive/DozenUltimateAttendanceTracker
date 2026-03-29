@@ -14,13 +14,18 @@ class AttendancesController < ApplicationController
   COLOR_PROFILES = %w[default red_green_safe tritanopia_safe monochrome].freeze
 
   def index
-    @view_mode = params[:view].presence_in(VIEW_MODES) || "monthly"
-    @color_profile = params[:color_profile].presence_in(COLOR_PROFILES) || "red_green_safe"
+    @view_mode = params[:view].presence_in(VIEW_MODES) || "calendar"
+    @color_profile = params[:color_profile].presence_in(COLOR_PROFILES) || "default"
     @selected_date = parse_date(params[:date])
 
-    # everyone can optionally pick a player to view; coaches and players alike
+    # everyone can optionally pick a player to view
     @players = User.where(role: :player).order(:name)
-    @selected_player = User.find_by(id: params[:player_id]) if params[:player_id].present?
+    @selected_player = if params.key?(:player_id)
+                         User.find_by(id: params[:player_id])
+                       else
+                         # Initial page load, default to the current user if they are a player.
+                         current_user.player? ? current_user : nil
+                       end
     @recent_recsports_events = RecsportsEvent.includes(participants: :user).recent_first.limit(5)
 
     # coaches can view all players by leaving player selector blank, or pick one player.

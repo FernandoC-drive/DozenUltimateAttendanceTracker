@@ -24,10 +24,22 @@ class WorkoutCheckinsController < ApplicationController
     end
   end
 
+  def destroy
+    @checkin = WorkoutCheckin.find(params[:id])
+    
+    # Security check: only the player or a coach can delete this
+    if current_user == @checkin.player || current_user.coach?
+      @checkin.destroy
+      redirect_to attendances_path(workout_month: @checkin.workout_date.strftime("%Y-%m-%d")), notice: "Workout deleted successfully."
+    else
+      redirect_to attendances_path, alert: "Not authorized to delete this workout."
+    end
+  end
+
   private
 
-  # Strong Parameters: strictly permits only the date, URL, and player_id
+  # Strong Parameters: strictly permits only the date, URL, player id, and proof image.
   def workout_checkin_params
-    params.require(:workout_checkin).permit(:workout_date, :proof_url, :player_id)
+    params.require(:workout_checkin).permit(:workout_date, :proof_url, :player_id, :proof_image)
   end
 end
