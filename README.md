@@ -51,8 +51,8 @@ docker run --rm -it --network attendance-net `
 
 ## Test accounts
 
-- Coach: `coach@example.com` / `password`
-- Player: `player@example.com` / `password`
+- Coach: `coach@tamu.com` / `password`
+- Player: `player@tamu.com` / `password`
 
 ## RecSports sync setup
 
