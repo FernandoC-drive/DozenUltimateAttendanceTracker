@@ -10,13 +10,13 @@ Faker::Internet.unique.clear
 
 puts "Seeding fixed accounts..."
 
-coach = User.find_or_create_by!(email: "coach@example.com") do |u|
+coach = User.find_or_create_by!(email: "coach@tamu.edu") do |u|
   u.name = "Default Coach"
   u.role = :coach
   u.password = "password"
 end
 
-player = User.find_or_create_by!(email: "player@example.com") do |u|
+player = User.find_or_create_by!(email: "player@tamu.edu") do |u|
   u.name = "Default Player"
   u.role = :player
   u.password = "password"
@@ -26,7 +26,7 @@ puts "Generating 20 random players with history..."
 20.times do
   new_player = User.create!(
     name: Faker::Name.name,
-    email: Faker::Internet.unique.email,
+    email: "#{Faker::Internet.unique.username}@tamu.edu", 
     password: "password123",
     role: :player
   )
@@ -68,4 +68,4 @@ RecsportsCredential.find_or_create_by!(form_url: "https://example.com/recsports_
 end
 
 puts "Seeds completed!"
-puts "Login: coach@example.com / password"
+puts "Login: coach@tamu.edu / password"

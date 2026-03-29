@@ -40,7 +40,7 @@
 
   <% if @selected_player %>
     <div class="attendance-summary">
-      <strong><%= @selected_player.name %> attendance for <%= @selected_date.strftime('%B %Y') %></strong>
+      <strong><%= @selected_player.name %> attendance for <%= @date_range[:label] %></strong>
       <div class="progress-container" title="Monthly attendance: <%= @percent_attended %>%">
         <div class="progress-fill" style="width: <%= @percent_attended %>%;" aria-label="Monthly attendance progress: <%= @percent_attended %>%"></div>
       </div>
@@ -194,9 +194,9 @@
             <td><%= summary[:total_possible_days] %></td>
             <td><%= summary[:percent_attended] %>%</td>
             <td>
-              <% week_start = @selected_date.beginning_of_week(:monday) %>
-              <% weekly = WeeklyWorkout.find_by(player: summary[:player], week_start_date: week_start) %>
-              <% completed = weekly&.complete || false %>
+              <% completed = summary[:workout_complete] %>
+              <% week_start = summary[:target_week_start] %>
+              
               <% if current_user.coach? %>
                 <%= form_with url: toggle_workout_complete_attendances_path, method: :post, local: true, style: 'display:inline' do |f| %>
                   <%= hidden_field_tag :player_id, summary[:player].id %>
@@ -315,20 +315,32 @@
                 </h4>
                 
                 <ul class="history-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;">
+                  <% 
+                    # Check if the coach has manually overridden this week to be incomplete
+                    weekly_tracker = WeeklyWorkout.find_by(player: @selected_player, week_start_date: week_start)
+                    is_overridden = weekly_tracker.present? && weekly_tracker.complete == false
+                  %>
+
                   <% checkins.each do |checkin| %>
-                    <li class="history-item" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px;">
+                    <!-- If overridden, apply a gray-out filter and lower opacity -->
+                    <li class="history-item" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; <%= 'opacity: 0.5; filter: grayscale(100%); pointer-events: none;' if is_overridden %>">
+                      
                       <strong><%= checkin.workout_date.strftime("%a, %b %d") %></strong> 
                       
                       <% if checkin.proof_image.attached? %>
                         <%= image_tag checkin.proof_image, style: "width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;" %>
-                        <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em;" %>
+                        <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em; #{'pointer-events: auto;' if is_overridden}" %>
                       <% elsif checkin.proof_url.present? %>
-                        - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link" %>
+                        - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link", style: "#{'pointer-events: auto;' if is_overridden}" %>
                       <% else %>
                         - <span class="text-muted">No proof provided</span>
                       <% end %>
 
-                      <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;" %>
+                      <% unless is_overridden %>
+                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;" %>
+                      <% else %>
+                        <span style="margin-left: auto; color: #d9534f; font-size: 0.8em; font-weight: bold;">Rejected by Coach</span>
+                      <% end %>
                     </li>
                   <% end %>
                 </ul>
@@ -402,20 +414,32 @@
                 </h4>
                 
                 <ul class="history-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;">
+                  <% 
+                    # Check if the coach has manually overridden this week to be incomplete
+                    weekly_tracker = WeeklyWorkout.find_by(player: @selected_player, week_start_date: week_start)
+                    is_overridden = weekly_tracker.present? && weekly_tracker.complete == false
+                  %>
+
                   <% checkins.each do |checkin| %>
-                    <li class="history-item" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px;">
+                    <!-- If overridden, apply a gray-out filter and lower opacity -->
+                    <li class="history-item" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; <%= 'opacity: 0.5; filter: grayscale(100%); pointer-events: none;' if is_overridden %>">
+                      
                       <strong><%= checkin.workout_date.strftime("%a, %b %d") %></strong> 
                       
                       <% if checkin.proof_image.attached? %>
                         <%= image_tag checkin.proof_image, style: "width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;" %>
-                        <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em;" %>
+                        <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em; #{'pointer-events: auto;' if is_overridden}" %>
                       <% elsif checkin.proof_url.present? %>
-                        - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link" %>
+                        - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link", style: "#{'pointer-events: auto;' if is_overridden}" %>
                       <% else %>
                         - <span class="text-muted">No proof provided</span>
                       <% end %>
 
-                      <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;" %>
+                      <% unless is_overridden %>
+                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;" %>
+                      <% else %>
+                        <span style="margin-left: auto; color: #d9534f; font-size: 0.8em; font-weight: bold;">Rejected by Coach</span>
+                      <% end %>
                     </li>
                   <% end %>
                 </ul>
@@ -446,6 +470,7 @@
     if (viewSelect && dateInput) {
       viewSelect.addEventListener("change", function () {
         const mode = this.value;
+        dateInput.value = "";
         
         // Morph the HTML input type depending on view
         if (mode === "monthly" || mode === "calendar") {

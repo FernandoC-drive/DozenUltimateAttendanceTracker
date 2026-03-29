@@ -14,7 +14,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       flash[:success] = "Successfully authenticated from Google account."
       sign_in_and_redirect user, event: :authentication
     else
-      flash[:alert] = "Authentication failed."
+      flash[:alert] = "Authentication failed. You must use a @tamu.edu email address to log in."
       redirect_to new_session_path
     end
   end

@@ -8,7 +8,10 @@ class User < ApplicationRecord
   has_many :recsports_event_participants, dependent: :destroy, inverse_of: :user
 
   validates :name, :email, presence: true
-  validates :email, uniqueness: true
+  validates :email, uniqueness: true, format: { 
+    with: /\A.+@tamu\.edu\z/i, 
+    message: "must be a @tamu.edu account" 
+  }
   validates :recsports_uin, uniqueness: true, allow_blank: true
 
   devise :omniauthable, :timeoutable, omniauth_providers: [:google_oauth2]
@@ -23,8 +26,15 @@ class User < ApplicationRecord
     if user.new_record?
       user.password = SecureRandom.hex(15)
     end
+
+    # Fetch the comma-separated list from Heroku, split it into an array, and clean up any extra spaces
+    whitelisted_emails = ENV.fetch('COACH_EMAILS', '').split(',').map(&:strip)
     
-    user.save!
+    if whitelisted_emails.include?(email)
+      user.role = :coach
+    end
+    
+    user.save
     user
   end
 end

@@ -96,8 +96,20 @@ class AttendancesController < ApplicationController
   private
 
   def parse_date(raw)
-    Date.parse(raw.to_s)
-  rescue ArgumentError
+    raw_str = raw.to_s.strip
+    return Date.current if raw_str.blank?
+    
+    if raw_str.match?(/\A\d{4}-\d{2}\z/)
+      # Formats "2026-02" (from the Monthly view) into "2026-02-01" so Ruby can read it
+      Date.parse("#{raw_str}-01")
+    elsif raw_str.match?(/\A\d{4}-W\d{2}\z/)
+      # Formats "2026-W13" (from the Weekly view) into the Monday of that specific week
+      Date.strptime("#{raw_str}-1", "%G-W%V-%u")
+    else
+      # Handles standard "2026-03-29" from the Daily view
+      Date.parse(raw_str)
+    end
+  rescue ArgumentError, TypeError
     Date.current
   end
 
@@ -114,35 +126,63 @@ class AttendancesController < ApplicationController
   end
 
   def calculate_attendance_summary(scope)
-    # Get the appropriate date range based on view mode
     date_range = case @view_mode
                  when "daily"
                    @selected_date..@selected_date
                  when "weekly"
                    @selected_date.beginning_of_week(:monday)..@selected_date.end_of_week(:sunday)
                  else
-                   # monthly and calendar
                    @selected_date.beginning_of_month..@selected_date.end_of_month
                  end
 
-    # Filter to only Monday (1), Wednesday (3), and Friday (5)
     mwf_dates = (date_range.begin..date_range.end).select { |d| [1, 3, 5].include?(d.wday) }
-
-    # Get all players in the system (or just the selected player if one is chosen)
     players_to_query = @selected_player ? [@selected_player] : User.where(role: :player).order(:name)
 
-    # Build summary for each player with attendance within the date range (M/W/F only)
+    target_week_start = case @view_mode
+                        when "weekly"
+                          @selected_date.beginning_of_week(:monday)
+                        else
+                          if @selected_date.beginning_of_month == Date.current.beginning_of_month
+                            Date.current.beginning_of_week(:monday)
+                          else
+                            @selected_date.end_of_month.beginning_of_week(:monday)
+                          end
+                        end
+
+    # Fetch DB records (respects Coach manual overrides)
+    weekly_workouts = WeeklyWorkout.where(
+      player_id: players_to_query.map(&:id), 
+      week_start_date: target_week_start
+    ).index_by(&:player_id)
+
+    # Dynamically count actual workouts for the target week
+    target_week_end = target_week_start.end_of_week(:monday)
+    actual_workout_counts = WorkoutCheckin.where(
+      player_id: players_to_query.map(&:id),
+      workout_date: target_week_start..target_week_end
+    ).group(:player_id).count
+
     summary = players_to_query.map do |player|
       attendance_records = Attendance.where(player: player, date: mwf_dates)
       total_days_attended = attendance_records.where("days_attended > 0").sum(:days_attended)
       total_possible_days = mwf_dates.count
       percent = total_possible_days > 0 ? ((total_days_attended.to_f / total_possible_days) * 100).round(1) : 0.0
 
+      db_record = weekly_workouts[player.id]
+      
+      is_complete = if db_record.present?
+                      db_record.complete
+                    else
+                      (actual_workout_counts[player.id] || 0) >= 2
+                    end
+
       {
         player: player,
         total_days_attended: total_days_attended,
         total_possible_days: total_possible_days,
-        percent_attended: percent
+        percent_attended: percent,
+        workout_complete: is_complete,
+        target_week_start: target_week_start 
       }
     end
 
@@ -155,7 +195,7 @@ class AttendancesController < ApplicationController
       { start: @selected_date, end: @selected_date, label: @selected_date.strftime("%A, %B %d, %Y") + " (M/W/F only)" }
     when "weekly"
       start_date = @selected_date.beginning_of_week(:monday)
-      end_date = @selected_date.end_of_week(:sunday)
+      end_date = @selected_date.end_of_week(:monday)
       { start: start_date, end: end_date, label: "Week of #{start_date.strftime('%B %d')} - #{end_date.strftime('%B %d, %Y')} (M/W/F only)" }
     else
       # monthly

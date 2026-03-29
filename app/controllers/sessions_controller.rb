@@ -7,8 +7,6 @@ class SessionsController < ApplicationController
     if user&.authenticate(params[:password])
       session[:user_id] = user.id
 
-      # No additional action needed - role enum is the single source of truth
-
       redirect_to root_path, notice: "Signed in successfully."
     else
       flash.now[:alert] = "Invalid email or password."

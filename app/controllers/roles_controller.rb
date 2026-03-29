@@ -3,7 +3,7 @@ class RolesController < ApplicationController
 
   def enable_coach
     # In a production app, you would use ENV['COACH_PIN'] here
-    if params[:password] == "howdy"
+    if params[:password] == ENV['COACH_PIN']
       current_user.coach!
       redirect_back fallback_location: root_path, notice: "Coach view enabled."
     else
