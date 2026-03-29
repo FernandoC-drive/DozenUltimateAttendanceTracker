@@ -21,6 +21,7 @@ class AttendancesController < ApplicationController
     # everyone can optionally pick a player to view; coaches and players alike
     @players = User.where(role: :player).order(:name)
     @selected_player = User.find_by(id: params[:player_id]) if params[:player_id].present?
+    @recent_recsports_events = RecsportsEvent.includes(participants: :user).recent_first.limit(5)
 
     # coaches can view all players by leaving player selector blank, or pick one player.
     # NB: we no longer auto-select the first player for coaches so "all players" works.

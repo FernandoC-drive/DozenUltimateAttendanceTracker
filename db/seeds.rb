@@ -1,8 +1,12 @@
 puts "Cleaning up old records..."
+RecsportsEventParticipant.destroy_all if defined?(RecsportsEventParticipant)
+RecsportsEvent.destroy_all if defined?(RecsportsEvent)
+WeeklyWorkout.destroy_all
 WorkoutCheckin.destroy_all
 WeeklyWorkout.destroy_all
 Attendance.destroy_all
 User.where(uid: nil).destroy_all
+Faker::Internet.unique.clear
 
 puts "Seeding fixed accounts..."
 
@@ -63,5 +67,5 @@ RecsportsCredential.find_or_create_by!(form_url: "https://example.com/recsports_
   c.active = true
 end
 
-puts "✅ Seeds completed!"
+puts "Seeds completed!"
 puts "Login: coach@example.com / password"

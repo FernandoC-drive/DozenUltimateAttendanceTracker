@@ -5,13 +5,13 @@ class RecsportsSyncJob < ApplicationJob
     credential = RecsportsCredential.first
     return unless credential
 
-    rows = if credential.manual_upload?
+    snapshot = if credential.manual_upload?
       parse_manual_payload(manual_payload)
     else
-      Recsports::Client.new(credential).fetch_attendance
+      Recsports::Client.new(credential).fetch_snapshot
     end
 
-    Recsports::Importer.new(rows: rows).call
+    Recsports::Importer.new(snapshot: snapshot).call
     credential.update!(last_checked_at: Time.current, last_error: nil, active: true)
   rescue StandardError => e
     credential&.update(last_error: e.message, active: false)
@@ -21,10 +21,10 @@ class RecsportsSyncJob < ApplicationJob
   private
 
   def parse_manual_payload(payload)
-    return [] if payload.blank?
+    return {} if payload.blank?
 
     JSON.parse(payload)
   rescue JSON::ParserError
-    []
+    {}
   end
 end

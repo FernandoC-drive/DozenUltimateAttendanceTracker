@@ -1,10 +1,24 @@
 # Team Attendance App
 
-## Local testing with Docker (recommended)
+## Local testing with Docker
 
 Run these commands from the project root in PowerShell.
 
-1. Create a Docker network (one time):
+### Option 1: `docker compose`
+
+This is the fastest local startup path.
+
+```powershell
+docker compose up --build
+```
+
+Then open:
+
+`http://localhost:3000`
+
+### Option 2: manual Docker commands
+
+1. Create a Docker network one time:
 
 ```powershell
 docker network create attendance-net
@@ -20,7 +34,7 @@ docker run -d --name attendance-db --network attendance-net `
   -p 5432:5432 postgres:16
 ```
 
-3. Start Rails app:
+3. Start Rails:
 
 ```powershell
 docker run --rm -it --network attendance-net `
@@ -37,35 +51,74 @@ docker run --rm -it --network attendance-net `
 
 ## Test accounts
 
-- Coach: `coach@example.com` / `password` (logging in now automatically enables the coach view flag)
+- Coach: `coach@example.com` / `password`
 - Player: `player@example.com` / `password`
+
+## RecSports sync setup
+
+After the app is running:
+
+1. Sign in as the coach user.
+2. Open `RecSports Sync` from the top navigation.
+3. Set `Club or Home Events URL` to:
+
+```text
+https://sportclubs.tamu.edu/home/userClubs
+```
+
+4. Set `Access mode` to `Browser assisted`.
+5. Save the settings.
+6. Copy the `Browser Sync Token` shown on the page.
+7. Load the unpacked Chrome extension from the repo's `chrome_extension` folder.
+8. In Chrome, sign in to TAMU Sport Clubs and open the authenticated `Home Events` page.
+9. Open the extension popup.
+10. Enter:
+    - your attendance app URL
+    - the browser sync token
+11. Click `Sync Current Tab`.
+
+What the sync does:
+
+- runs inside the user's authenticated Chrome session
+- discovers each `View` event page
+- scrapes the participants table
+- posts the imported snapshot back into the Rails app
+- stores imported event rosters and attendance rows by event date
+
+Imported rosters appear on the main attendance dashboard under `Imported Practice Rosters`.
 
 ## Manual acceptance checks
 
-1. Sign in as coach (the system will flip on the coach boolean when you log in; coaches are also now defaulted to the first player when visiting the attendance page).
-2. Go to `Admin Attendance`, create/update attendance.  You no longer have to select a player – a default is chosen automatically and the toggle/swap buttons are visible in every view.
-3. Confirm success flash: `Attendance updated successfully.`
-4. Enter `-1` or `abc` for hours and confirm: `Invalid attendance hours.`
-5. Sign out and sign in as player.
-6. Confirm updated hours appear on player attendance page.
+1. Sign in as coach.
+2. Go to `Admin Attendance` and create or update an attendance row.
+3. Confirm the success flash says `Attendance updated successfully.`
+4. Enter `-1` or `abc` for attendance input and confirm validation blocks it.
+5. Open `RecSports Sync`, configure browser-assisted mode, and save the settings.
+6. Load the Chrome extension from the repo.
+7. Sign in to Sport Clubs, open Home Events, and run `Sync Current Tab` from the extension.
+8. Return to the dashboard and confirm imported rosters appear.
+9. Sign out and sign in as player.
+10. Confirm attendance still appears correctly on the player dashboard.
 
 ## Accessibility verification checks
 
-1. Open `Attendance` and use the `Color profile` dropdown to switch between:
-   `Standard`, `Red-Green Friendly`, `Blue-Yellow Friendly`, and
-   `High Contrast Monochrome`.
-2. Confirm the heatmap legend appears with:
-   `No attendance recorded` and `Attendance recorded`.
-3. Confirm attendance and workout statuses include text labels in addition to color:
-   `Present`, `Absent`, `No data`, `Proof attached`, `No proof`.
-4. Hover status chips/rows and confirm tooltip text appears.
-5. Validate color-deficiency readability with a simulator/checker (for example,
-   Chrome DevTools Rendering tab or Color Oracle) and verify statuses remain
-   distinguishable via text/icon/pattern cues.
+1. Open `Attendance` and use the `Color profile` dropdown to switch between `Standard`, `Red-Green Friendly`, `Blue-Yellow Friendly`, and `High Contrast Monochrome`.
+2. Confirm the heatmap legend appears with `No attendance recorded` and `Attendance recorded`.
+3. Confirm attendance and workout statuses include text labels in addition to color: `Present`, `Absent`, `No data`, `Proof attached`, `No proof`.
+4. Hover status chips or rows and confirm tooltip text appears.
+5. Validate readability with a color-deficiency simulator such as Chrome DevTools Rendering or Color Oracle.
 
 ## Run automated tests
 
-In a new terminal while Rails container is running:
+From the project root:
+
+```powershell
+bundle install
+bundle exec rails db:prepare
+bundle exec rspec spec/services/recsports/client_spec.rb spec/services/recsports/importer_spec.rb spec/controllers/admin/recsports_controller_spec.rb spec/controllers/attendances_controller_spec.rb
+```
+
+Or, in a new terminal while the Rails container is running:
 
 ```powershell
 docker run --rm -it --network attendance-net `

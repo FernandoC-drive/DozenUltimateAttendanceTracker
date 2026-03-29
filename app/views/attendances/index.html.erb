@@ -207,6 +207,36 @@
   <% end %>
 </section>
 
+<!-- THE SCRAPING SECTION -->
+<section class="card">
+  <header class="card-header">
+    <h2>Imported Practice Rosters</h2>
+    <p>Latest participant lists scraped from the Sport Clubs event pages.</p>
+  </header>
+
+  <% if @recent_recsports_events.any? %>
+    <div class="workout-history">
+      <% @recent_recsports_events.each do |event| %>
+        <article class="history-item" style="display: block; margin-bottom: 16px;">
+          <strong><%= event.title %></strong>
+          <div>
+            <%= [event.starts_at&.strftime("%b %d, %Y %I:%M%P"), event.venue].compact.join(" at ") %>
+          </div>
+          <div>
+            <%= pluralize(event.participants.size, "participant") %>
+          </div>
+          <div>
+            <%= event.participants.map { |participant| participant.user.name }.join(", ") %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="empty-state">No imported Sport Clubs practice data yet.</p>
+  <% end %>
+</section>
+
+<!-- SPECIFIC PLAYER IS SELECTED FROM THE DROPDOWN -->
 <% if @selected_player %>
   <section class="card workout-card">
     <header class="card-header">
@@ -214,7 +244,7 @@
       <p>Workout history and check-ins for <%= @selected_player.name %>.</p>
     </header>
 
-    <% if current_user == @selected_player || current_user.coach? %>
+    <% if current_user == @selected_player && current_user.player? %>
       <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path, local: true, class: "workout-form" do |f| %>
         <%= f.hidden_field :player_id, value: @selected_player.id %>
         <div class="form-group">
@@ -233,13 +263,11 @@
       <% end %>
     <% end %>
 
+    <!-- Shared History: Both coaches and the player can see this history -->
     <div class="workout-history">
       <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        
         <%= link_to "← Previous", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
-        
         <h3 style="margin: 0;"><%= @workout_month.strftime("%B %Y") %></h3>
-        
         <% if @workout_month.beginning_of_month < Date.today.beginning_of_month %>
           <%= link_to "Next →", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
         <% else %>
@@ -252,7 +280,6 @@
           <% @workout_checkins.each do |checkin| %>
             <li class="history-item">
               <strong><%= checkin.workout_date.strftime("%b %d, %Y") %></strong> 
-              
               <% if checkin.proof_url.present? %>
                 - <%= link_to "View Proof", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link" %>
               <% else %>
@@ -266,8 +293,11 @@
       <% end %>
     </div>
   </section>
+
+<!-- NO PLAYER IS SELECTED -->
 <% else %>
-  <% unless current_user.coach? %>
+  <!-- If no player is selected, coaches see nothing down here (they use the master table). Players see their own log. -->
+  <% if current_user.player? %>
     <section class="card workout-card">
       <header class="card-header">
         <h2>Log a Workout</h2>
@@ -292,11 +322,8 @@
 
       <div class="workout-history">
         <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          
           <%= link_to "← Previous", attendances_path(workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
-          
           <h3 style="margin: 0;"><%= @workout_month.strftime("%B %Y") %></h3>
-          
           <% if @workout_month.beginning_of_month < Date.today.beginning_of_month %>
             <%= link_to "Next →", attendances_path(workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
           <% else %>
@@ -309,7 +336,6 @@
             <% @workout_checkins.each do |checkin| %>
               <li class="history-item">
                 <strong><%= checkin.workout_date.strftime("%b %d, %Y") %></strong> 
-                
                 <% if checkin.proof_url.present? %>
                   - <%= link_to "View Proof", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link" %>
                 <% else %>

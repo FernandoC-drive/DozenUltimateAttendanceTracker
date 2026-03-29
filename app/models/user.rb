@@ -5,9 +5,11 @@ class User < ApplicationRecord
 
   has_many :attendances, foreign_key: :player_id, dependent: :destroy, inverse_of: :player
   has_many :workout_checkins, foreign_key: :player_id, dependent: :destroy, inverse_of: :player
+  has_many :recsports_event_participants, dependent: :destroy, inverse_of: :user
 
   validates :name, :email, presence: true
   validates :email, uniqueness: true
+  validates :recsports_uin, uniqueness: true, allow_blank: true
 
   devise :omniauthable, :timeoutable, omniauth_providers: [:google_oauth2]
 
