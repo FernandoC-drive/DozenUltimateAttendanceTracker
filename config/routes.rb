@@ -19,7 +19,6 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :attendances, only: :index
   resources :workout_checkins, only: [:create]
 
   resources :attendance_records do
@@ -28,9 +27,11 @@ Rails.application.routes.draw do
     end
   end
 
+
   resources :attendances do
     collection do
       patch :toggle   # supports toggling by date/player in calendar
+      post :toggle_workout_complete # for coach to check/uncheck workout completion
     end
     member do
       patch :toggle

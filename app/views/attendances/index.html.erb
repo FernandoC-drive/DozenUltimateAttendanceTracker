@@ -8,7 +8,7 @@
     <%= f.date_field :date, value: @selected_date %>
 
     <%= f.label :player_id, "Player" %>
-    <%= f.select :player_id, @players.collect { |p| [p.name, p.id] }, { include_blank: "(all)" }, selected: @selected_player&.id %>
+    <%= f.select :player_id, @players.collect { |p| [p.name, p.id] }, { include_blank: "(all)" }, selected: @selected_player.try(:id) %>
 
     <%= f.label :view, "View" %>
     <%= f.select :view, [["Daily", "daily"], ["Weekly", "weekly"], ["Monthly", "monthly"], ["Calendar", "calendar"]], selected: @view_mode %>
@@ -35,14 +35,11 @@
 
   <div class="heat-legend" aria-label="Attendance heatmap legend">
     <strong>Heatmap legend:</strong>
-    <span class="legend-item">
-      <span class="legend-swatch heat-0" aria-hidden="true"></span>
-      <span>No attendance recorded</span>
-    </span>
-    <span class="legend-item">
-      <span class="legend-swatch heat-1" aria-hidden="true"></span>
-      <span>Attendance recorded</span>
-    </span>
+    <span class="legend-item"><span class="legend-swatch heat-0" aria-hidden="true"></span><span>0% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-1" aria-hidden="true"></span><span>1-24% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-2" aria-hidden="true"></span><span>25-49% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-3" aria-hidden="true"></span><span>50-74% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-4" aria-hidden="true"></span><span>75-100% attendance</span></span>
   </div>
 
   <% if @view_mode == "calendar" %>
@@ -97,48 +94,120 @@
         </tbody>
       </table>
     <% else %>
-      <p>Please select a player to view the calendar.</p>
+      <h3>Team Attendance Calendar - <%= @selected_date.strftime("%B %Y") %></h3>
+      <p>Shows number of players who attended each day</p>
+      <table class="calendar all-players">
+        <thead>
+          <tr>
+            <% %w[Mon Tue Wed Thu Fri Sat Sun].each do |day| %>
+              <th><%= day %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% first = @selected_date.beginning_of_month.beginning_of_week(:monday) %>
+          <% last = @selected_date.end_of_month.end_of_week(:sunday) %>
+          <% (first..last).to_a.in_groups_of(7, nil) do |week| %>
+            <tr>
+              <% week.each do |day| %>
+                <% day_class = "" %>
+                <% if day %>
+                  <% count = @attendance_counts_by_day[day] || 0 %>
+                  <% pct = @players.any? ? ((count.to_f / @players.count) * 100).round : 0 %>
+                  <% day_class = if pct == 0
+                                   "heat-0"
+                                 elsif pct < 25
+                                   "heat-1"
+                                 elsif pct < 50
+                                   "heat-2"
+                                 elsif pct < 75
+                                   "heat-3"
+                                 else
+                                   "heat-4"
+                                 end %>
+                <% else %>
+                  <% count = 0 %>
+                <% end %>
+
+                <td class="<%= ['other-month', day_class].compact.join(' ') if day %>">
+                  <% if day %>
+                    <div class="day-number"><%= day.day %></div>
+                    <div class="attendance-count">
+                      <strong><%= count %></strong>
+                      <% if count > 0 %>
+                        <small><%= count == 1 ? "player" : "players" %></small>
+                      <% else %>
+                        <small>–</small>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
     <% end %>
   <% else %>
+    <!-- Summary table view for daily, weekly, and monthly modes -->
     <table>
       <thead>
         <tr>
           <th>Player</th>
-          <th>Date</th>
-          <th>Days</th>
-          <th>Attended</th>
-          <th>Source</th>
+          <th>Days Attended</th>
+          <th>Total Possible Days</th>
+          <th>Attendance %</th>
+          <th>Workout Complete (2/wk)</th>
         </tr>
       </thead>
       <tbody>
-        <% @attendances.each do |attendance| %>
-          <% is_present = attendance.attended %>
-          <tr class="heat-<%= attendance.heat_level %>" title="<%= is_present ? "Present" : "Absent" %> on <%= attendance.date %>">
-            <td><%= attendance.player.name %></td>
-            <td><%= attendance.date %></td>
-            <td><%= attendance.days_attended %></td>
-            <td style="display: flex; align-items: center; gap: 10px;">
-              <span class="status-pill <%= is_present ? "present" : "absent" %>" title="<%= is_present ? "Present" : "Absent" %> status" aria-label="<%= is_present ? "Present" : "Absent" %> status">
-                <span class="status-icon" aria-hidden="true"><%= is_present ? "P" : "A" %></span>
-                <span><%= is_present ? "Present" : "Absent" %></span>
-              </span>
-
+        <% total_attended = 0 %>
+        <% total_possible = 0 %>
+        <% @attendance_summary.each do |summary| %>
+          <% total_attended += summary[:total_days_attended] %>
+          <% total_possible += summary[:total_possible_days] %>
+          <% heat_class = case summary[:percent_attended]
+                        when 0 then "heat-0"
+                        when 1..24 then "heat-1"
+                        when 25..49 then "heat-2"
+                        when 50..74 then "heat-3"
+                        else "heat-4"
+                        end %>
+          <tr class="<%= heat_class %>">
+            <td><%= summary[:player].name %></td>
+            <td><%= summary[:total_days_attended] %></td>
+            <td><%= summary[:total_possible_days] %></td>
+            <td><%= summary[:percent_attended] %>%</td>
+            <td>
+              <% week_start = @selected_date.beginning_of_week(:monday) %>
+              <% weekly = WeeklyWorkout.find_by(player: summary[:player], week_start_date: week_start) %>
+              <% completed = weekly&.complete || false %>
               <% if current_user.coach? %>
-                <%= button_to "Swap",
-                              toggle_attendance_path(attendance, color_profile: @color_profile, view: @view_mode),
-                              method: :patch,
-                              form: { style: "display: inline-block; margin: 0;" },
-                              style: "font-size: 0.8em; padding: 2px 5px;" %>
+                <%= form_with url: toggle_workout_complete_attendances_path, method: :post, local: true, style: 'display:inline' do |f| %>
+                  <%= hidden_field_tag :player_id, summary[:player].id %>
+                  <%= hidden_field_tag :week_start, week_start %>
+                  <%= check_box_tag 'complete', '1', completed, onchange: 'this.form.submit();' %>
+                <% end %>
+              <% else %>
+                <%= completed ? '✅' : '❌' %>
               <% end %>
             </td>
-            <td><%= attendance.source %></td>
           </tr>
         <% end %>
       </tbody>
+      <tfoot>
+        <tr style="font-weight: bold; border-top: 2px solid #333;">
+          <td>TOTAL</td>
+          <td><%= total_attended %></td>
+          <td><%= total_possible %></td>
+          <td><%= total_possible > 0 ? ((total_attended.to_f / total_possible) * 100).round(1) : 0.0 %>%</td>
+        </tr>
+      </tfoot>
     </table>
   <% end %>
 </section>
 
+<!-- THE SCRAPING SECTION -->
 <section class="card">
   <header class="card-header">
     <h2>Imported Practice Rosters</h2>
@@ -167,38 +236,40 @@
   <% end %>
 </section>
 
-<% unless current_user.coach? %>
+<!-- SPECIFIC PLAYER IS SELECTED FROM THE DROPDOWN -->
+<% if @selected_player %>
   <section class="card workout-card">
     <header class="card-header">
-      <h2>Log a Workout</h2>
-      <p>Submit your workout date and a link to your proof.</p>
+      <h2><%= @selected_player.name %>'s Workout Tracker</h2>
+      <p>Workout history and check-ins for <%= @selected_player.name %>.</p>
     </header>
 
-    <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path, local: true, class: "workout-form" do |f| %>
-      <div class="form-group">
-        <%= f.label :workout_date, "Date Completed", class: "form-label" %>
-        <%= f.date_field :workout_date, required: true, max: Date.today, class: "form-control" %>
-      </div>
+    <% if current_user == @selected_player && current_user.player? %>
+      <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path, local: true, class: "workout-form" do |f| %>
+        <%= f.hidden_field :player_id, value: @selected_player.id %>
+        <div class="form-group">
+          <%= f.label :workout_date, "Date Completed", class: "form-label" %>
+          <%= f.date_field :workout_date, required: true, max: Date.today, class: "form-control" %>
+        </div>
 
-      <div class="form-group">
-        <%= f.label :proof_url, "Proof of Workout (URL)", class: "form-label" %>
-        <%= f.url_field :proof_url, placeholder: "https://...", class: "form-control" %>
-      </div>
+        <div class="form-group">
+          <%= f.label :proof_url, "Proof of Workout (URL)", class: "form-label" %>
+          <%= f.url_field :proof_url, placeholder: "https://...", class: "form-control" %>
+        </div>
 
-      <div class="form-actions">
-        <%= f.submit "Save Workout", class: "btn-primary" %>
-      </div>
+        <div class="form-actions">
+          <%= f.submit "Save Workout", class: "btn-primary" %>
+        </div>
+      <% end %>
     <% end %>
 
+    <!-- Shared History: Both coaches and the player can see this history -->
     <div class="workout-history">
       <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        
-        <%= link_to "← Previous", attendances_path(workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
-        
+        <%= link_to "← Previous", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
         <h3 style="margin: 0;"><%= @workout_month.strftime("%B %Y") %></h3>
-        
         <% if @workout_month.beginning_of_month < Date.today.beginning_of_month %>
-          <%= link_to "Next →", attendances_path(workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
+          <%= link_to "Next →", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
         <% else %>
           <span class="text-muted" style="opacity: 0.5;">Next →</span>
         <% end %>
@@ -209,7 +280,6 @@
           <% @workout_checkins.each do |checkin| %>
             <li class="history-item">
               <strong><%= checkin.workout_date.strftime("%b %d, %Y") %></strong> 
-              
               <% if checkin.proof_url.present? %>
                 - <%= link_to "View Proof", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link" %>
               <% else %>
@@ -223,4 +293,61 @@
       <% end %>
     </div>
   </section>
+
+<!-- NO PLAYER IS SELECTED -->
+<% else %>
+  <!-- If no player is selected, coaches see nothing down here (they use the master table). Players see their own log. -->
+  <% if current_user.player? %>
+    <section class="card workout-card">
+      <header class="card-header">
+        <h2>Log a Workout</h2>
+        <p>Submit your workout date and a link to your proof.</p>
+      </header>
+
+      <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path, local: true, class: "workout-form" do |f| %>
+        <div class="form-group">
+          <%= f.label :workout_date, "Date Completed", class: "form-label" %>
+          <%= f.date_field :workout_date, required: true, max: Date.today, class: "form-control" %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :proof_url, "Proof of Workout (URL)", class: "form-label" %>
+          <%= f.url_field :proof_url, placeholder: "https://...", class: "form-control" %>
+        </div>
+
+        <div class="form-actions">
+          <%= f.submit "Save Workout", class: "btn-primary" %>
+        </div>
+      <% end %>
+
+      <div class="workout-history">
+        <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <%= link_to "← Previous", attendances_path(workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
+          <h3 style="margin: 0;"><%= @workout_month.strftime("%B %Y") %></h3>
+          <% if @workout_month.beginning_of_month < Date.today.beginning_of_month %>
+            <%= link_to "Next →", attendances_path(workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
+          <% else %>
+            <span class="text-muted" style="opacity: 0.5;">Next →</span>
+          <% end %>
+        </div>
+
+        <% if @workout_checkins.present? %>
+          <ul class="history-list">
+            <% @workout_checkins.each do |checkin| %>
+              <li class="history-item">
+                <strong><%= checkin.workout_date.strftime("%b %d, %Y") %></strong> 
+                <% if checkin.proof_url.present? %>
+                  - <%= link_to "View Proof", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link" %>
+                <% else %>
+                  - <span class="text-muted">No proof provided</span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="empty-state">No workouts logged for <%= @workout_month.strftime("%B") %>.</p>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
 <% end %>
