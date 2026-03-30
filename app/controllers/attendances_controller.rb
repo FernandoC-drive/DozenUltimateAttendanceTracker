@@ -130,15 +130,27 @@ class AttendancesController < ApplicationController
   private
 
   def workout_chart_data
-    month   = (@chart_month || Date.today).beginning_of_month
-    players = User.order(:name)
-    weeks   = (0..((month.end_of_month - month.beginning_of_week(:monday)).to_i / 7))
-                .map { |i| month.beginning_of_week(:monday) + i.weeks }
-                .select { |w| w <= month.end_of_month }
+    week_start = (@chart_month || Date.today).beginning_of_week(:monday)
+    players    = User.where(role: :player).order(:name)
+    workouts   = WeeklyWorkout.where(week_start_date: week_start).index_by(&:player_id)
+    completed  = workouts.values.count(&:complete)
 
-    weeks.map do |week_start|
-      completed = WeeklyWorkout.where(week_start_date: week_start, complete: true).count
-      { week: week_start.strftime("%-m/%-d"), completed: completed, total: players.count }
+    [{ 
+      week: week_start.strftime("%-m/%-d"),
+      week_start: week_start,
+      completed: completed,
+      total: players.count,
+      players: players.map { |p| { player: p, workout: workouts[p.id] } }
+    }]
+  end
+
+  def invalidate_workout
+    workout = WeeklyWorkout.find(params[:id])
+    if current_user.coach?
+      workout.update!(complete: false)
+      redirect_back(fallback_location: attendances_path, notice: "Workout marked invalid.")
+    else
+      redirect_back(fallback_location: attendances_path, alert: "Only coaches can edit workout statuses.")
     end
   end
 
