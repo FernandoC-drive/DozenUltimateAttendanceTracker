@@ -28,6 +28,9 @@ class AttendancesController < ApplicationController
                        end
     @recent_recsports_events = RecsportsEvent.includes(participants: :user).recent_first.limit(5)
 
+    @chart_month = params[:chart_month].present? ? Date.parse(params[:chart_month]) : Date.today
+    @workout_chart_data = workout_chart_data  # private method from the snippet
+
     # coaches can view all players by leaving player selector blank, or pick one player.
     # NB: we no longer auto-select the first player for coaches so "all players" works.
 
@@ -123,6 +126,22 @@ class AttendancesController < ApplicationController
       scope.for_month(@selected_date)
     end.order(date: :desc)
   end
+
+  private
+
+  def workout_chart_data
+    month   = (@chart_month || Date.today).beginning_of_month
+    players = User.order(:name)
+    weeks   = (0..((month.end_of_month - month.beginning_of_week(:monday)).to_i / 7))
+                .map { |i| month.beginning_of_week(:monday) + i.weeks }
+                .select { |w| w <= month.end_of_month }
+
+    weeks.map do |week_start|
+      completed = WeeklyWorkout.where(week_start_date: week_start, complete: true).count
+      { week: week_start.strftime("%-m/%-d"), completed: completed, total: players.count }
+    end
+  end
+
 
   def calculate_attendance_summary(scope)
     date_range = case @view_mode
