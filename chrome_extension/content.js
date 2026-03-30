@@ -149,9 +149,17 @@ function extractEventUrls(doc, baseUrl) {
 }
 
 async function fetchHtml(url) {
-  const response = await fetch(url, {
-    credentials: "include"
-  });
+  let response;
+
+  try {
+    response = await fetch(url, {
+      credentials: "include"
+    });
+  } catch (error) {
+    throw new Error(
+      `Could not fetch Sport Clubs page ${url}. Make sure you are still signed in to TAMU Sport Clubs in this Chrome window and try again.`
+    );
+  }
 
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url} (HTTP ${response.status})`);
@@ -194,16 +202,25 @@ async function scrapeCurrentPage() {
 }
 
 async function uploadSnapshot(appUrl, token, snapshot) {
-  const response = await fetch(`${appUrl}/admin/recsports/browser_sync`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      token,
-      snapshot
-    })
-  });
+  const uploadUrl = `${appUrl}/admin/recsports/browser_sync`;
+  let response;
+
+  try {
+    response = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        token,
+        snapshot
+      })
+    });
+  } catch (_error) {
+    throw new Error(
+      `Could not reach ${uploadUrl}. Confirm the attendance app URL is correct, the Heroku app is awake, and the extension has permission to access that site.`
+    );
+  }
 
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
