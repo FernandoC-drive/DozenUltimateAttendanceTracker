@@ -1,0 +1,127 @@
+<%# ============================================================
+    Workout Completion Pie Charts — one per week in the month.
+
+    Controller (AttendancesController#index):
+
+      @chart_month        = params[:chart_month].present? ? Date.parse(params[:chart_month]) : Date.today
+      @workout_chart_data = workout_chart_data
+
+    Private method:
+
+      def workout_chart_data
+        month   = (@chart_month || Date.today).beginning_of_month
+        players = User.order(:name)
+        weeks   = (0..((month.end_of_month - month.beginning_of_week(:monday)).to_i / 7))
+                    .map { |i| month.beginning_of_week(:monday) + i.weeks }
+                    .select { |w| w <= month.end_of_month }
+
+        weeks.map do |week_start|
+          completed = WeeklyWorkout.where(week_start_date: week_start, complete: true).count
+          { week: week_start.strftime("%-m/%-d"), completed: completed, total: players.count }
+        end
+      end
+    ============================================================ %>
+
+<section class="card wc-card">
+  <h2 class="wc-heading">Workout Completion</h2>
+  <p class="wc-sub">Share of players who completed their workout each week &mdash; <%= (@chart_month || Date.today).strftime("%B %Y") %></p>
+
+  <% if @workout_chart_data.blank? %>
+    <p style="color: #6b7a99; font-size: 0.9rem;">No workout data available for this period.</p>
+  <% else %>
+    <div class="wc-pies">
+      <% @workout_chart_data.each_with_index do |week, i| %>
+        <% pct = week[:total] > 0 ? (week[:completed].to_f / week[:total] * 100).round : 0 %>
+        <% stroke_color = pct >= 75 ? 'var(--success)' : pct >= 50 ? '#b35c00' : 'var(--error)' %>
+        <div class="wc-pie-col">
+          <div class="wc-pie-wrap">
+            <svg class="wc-pie" viewBox="0 0 36 36"
+                 aria-label="Week of <%= week[:week] %>: <%= pct %>% of players completed">
+              <circle class="wc-ring-bg" cx="18" cy="18" r="15.9" />
+              <circle class="wc-ring-fill"
+                      cx="18" cy="18" r="15.9"
+                      stroke="<%= stroke_color %>"
+                      stroke-dasharray="<%= pct %> <%= 100 - pct %>"
+                      stroke-dashoffset="25"
+                      style="animation-delay: <%= i * 0.12 %>s" />
+            </svg>
+            <div class="wc-pie-center">
+              <span class="wc-pct"><%= pct %><small>%</small></span>
+            </div>
+          </div>
+          <div class="wc-pie-label">Wk of <%= week[:week] %></div>
+          <div class="wc-pie-count"><%= week[:completed] %>/<%= week[:total] %> players</div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</section>
+
+<style>
+.wc-card     { margin-bottom: 1rem; }
+.wc-heading  { margin: 0 0 0.25rem; font-size: 1.1rem; color: var(--text); }
+.wc-sub      { margin: 0 0 1rem; font-size: 0.82rem; color: #6b7a99; }
+
+.wc-pies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.wc-pie-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.wc-pie-wrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.wc-pie {
+  width: 100px;
+  height: 100px;
+  transform: rotate(-90deg);
+}
+
+.wc-ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 3.5;
+}
+
+.wc-ring-fill {
+  fill: none;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
+  animation: wc-fill-in 0.65s cubic-bezier(.22,.68,0,1.2) forwards;
+}
+
+@keyframes wc-fill-in {
+  from { stroke-dasharray: 0 100; }
+}
+
+.wc-pie-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wc-pct {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+}
+.wc-pct small { font-size: 0.55em; color: #6b7a99; }
+
+.wc-pie-label { font-size: 0.75rem; color: var(--text);  font-weight: 600; }
+.wc-pie-count { font-size: 0.72rem; color: #6b7a99; }
+</style>

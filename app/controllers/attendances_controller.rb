@@ -20,6 +20,11 @@ class AttendancesController < ApplicationController
     @players = User.where(role: :player).order(:name)
     @selected_player = User.find_by(id: params[:player_id]) if params[:player_id].present?
 
+
+    # FIX ???????? 
+    @chart_month = params[:chart_month].present? ? Date.parse(params[:chart_month]) : Date.today
+    @workout_chart_data = workout_chart_data  # private method from the snippet
+
     # coaches generally want to toggle someone’s attendance; if they haven’t
     # picked anyone explicitly we default to the first player so that the
     # calendar/swap buttons are always rendered. (non‑coach users keep the
@@ -91,4 +96,21 @@ class AttendancesController < ApplicationController
       scope.for_month(@selected_date)
     end.order(date: :desc)
   end
+
+  private
+
+  def workout_chart_data
+    month   = (@chart_month || Date.today).beginning_of_month
+    players = User.order(:name)
+    weeks   = (0..((month.end_of_month - month.beginning_of_week(:monday)).to_i / 7))
+                .map { |i| month.beginning_of_week(:monday) + i.weeks }
+                .select { |w| w <= month.end_of_month }
+
+    weeks.map do |week_start|
+      completed = WeeklyWorkout.where(week_start_date: week_start, complete: true).count
+      { week: week_start.strftime("%-m/%-d"), completed: completed, total: players.count }
+    end
+  end
+
+
 end
