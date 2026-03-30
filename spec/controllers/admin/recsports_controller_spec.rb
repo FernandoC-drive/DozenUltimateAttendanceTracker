@@ -1,4 +1,5 @@
 require "rails_helper"
+require "zip"
 
 RSpec.describe Admin::RecsportsController, type: :controller do
   let(:coach) { User.create!(email: "coach@tamu.edu", name: "Coach", password: "password", role: :coach) }
@@ -35,6 +36,26 @@ RSpec.describe Admin::RecsportsController, type: :controller do
       expect(flash[:notice]).to eq("RecSports sync completed.")
       expect(RecsportsEvent.count).to eq(1)
       expect(User.find_by(recsports_uin: "732005379")).to be_present
+    end
+  end
+
+  describe "GET #download_extension" do
+    it "downloads the packaged Chrome extension from the app" do
+      get :download_extension
+
+      expect(response).to have_http_status(:success)
+      expect(response.media_type).to eq("application/zip")
+      expect(response.headers["Content-Disposition"]).to include("attachment")
+      expect(response.headers["Content-Disposition"]).to include("recsports-chrome-extension")
+
+      entries = Zip::File.open_buffer(response.body) do |zip_file|
+        zip_file.map(&:name)
+      end
+
+      expect(entries).to include("recsports_chrome_extension/manifest.json")
+      expect(entries).to include("recsports_chrome_extension/popup.html")
+      expect(entries).to include("recsports_chrome_extension/popup.js")
+      expect(entries).to include("recsports_chrome_extension/content.js")
     end
   end
 
