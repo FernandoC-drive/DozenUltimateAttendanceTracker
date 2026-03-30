@@ -34,6 +34,8 @@ Rails.application.routes.draw do
     end
   end
 
+  patch 'workouts/:id/invalidate', to: 'attendances#invalidate_workout', as: :invalidate_workout
+
   post 'toggle_coach', to: 'roles#enable_coach'
   delete 'toggle_coach', to: 'roles#disable_coach'
 
