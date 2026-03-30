@@ -9,7 +9,12 @@ Rails.application.routes.draw do
   end
 
   namespace :admin do
-    resources :attendances, only: %i[index create update]
+    resources :attendances, only: %i[index create update] do
+      collection do
+        patch :update_settings
+      end
+    end
+
     resource :recsports, only: %i[show update] do
       post :test_access
       post :sync_now

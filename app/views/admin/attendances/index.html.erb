@@ -1,53 +1,125 @@
-<% content_for :title, "Admin Attendance" %>
+<% content_for :title, "Admin Settings" %>
 
-<section class="card">
-  <h2>Coach Attendance Overrides</h2>
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
-  <%= form_with url: admin_attendances_path, method: :get, local: true, class: "toolbar" do |f| %>
-    <%= f.label :date, "Month" %>
-    <%= f.date_field :date, value: @selected_date %>
-    <%= f.submit "Load" %>
-  <% end %>
+<div style="display: flex; flex-direction: column; gap: 24px;">
 
-  <h3>Add or override attendance</h3>
-  <%= form_with model: [:admin, @attendance], url: admin_attendances_path, method: :post, class: "toolbar" do |f| %>
-    <%= f.collection_select :player_id, @players, :id, :name, prompt: "Select player" %>
-    <%= f.date_field :date, value: @selected_date %>
-    <%= f.number_field :days_attended, placeholder: "Days", min: 0 %>
-    <label><%= f.check_box :attended %> Attended</label>
-    <%= f.text_field :notes, placeholder: "Notes" %>
-    <%= f.submit "Save" %>
-  <% end %>
+  <section class="card">
+    <header class="card-header">
+      <h2>Player Quick Jump</h2>
+      <p>Search for a player to jump directly to their detailed attendance dashboard.</p>
+    </header>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Player</th>
-        <th>Date</th>
-        <th>Hours</th>
-        <th>Attended</th>
-        <th>Source</th>
-        <th>Override</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @attendances.each do |attendance| %>
-        <tr>
-          <td><%= attendance.player.name %></td>
-          <td><%= attendance.date %></td>
-          <td><%= attendance.days_attended %></td>
-          <td><%= attendance.attended ? "Yes" : "No" %></td>
-          <td><%= attendance.source %></td>
-          <td>
-            <%= form_with model: [:admin, attendance], method: :patch, class: "toolbar" do |f| %>
-              <%= f.number_field :days_attended, value: attendance.days_attended, size: 6, min: 0 %>
-              <label><%= f.check_box :attended, checked: attendance.attended %> Present</label>
-              <%= f.text_field :notes, value: attendance.notes, placeholder: "Notes" %>
-              <%= f.submit "Update" %>
-            <% end %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-</section>
+    <%= form_with url: attendances_path, method: :get, local: true, id: "quick-jump-form" do |f| %>
+      <%= f.hidden_field :view, value: 'calendar' %>
+      
+      <div class="form-group" style="max-width: 400px; margin-top: 10px;">
+        <%= f.select :player_id,
+                     options_for_select(@players.map { |p| [p.name, p.id] }),
+                     { prompt: "Type a name to search..." },
+                     { id: "player-quick-search", class: "form-control" } %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="card">
+    <header class="card-header">
+      <h2>Team Practice Days</h2>
+      <p>Configure which days of the week are counted towards mandatory attendance calculation.</p>
+    </header>
+
+    <%= form_with url: update_settings_admin_attendances_path, method: :patch, local: true do |f| %>
+      <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px;">
+        <% 
+          active_days = TeamSetting.current.practice_days_ints 
+        %>
+        
+        <% 
+          days_map = [
+            { name: 'Mon', num: 1 }, { name: 'Tue', num: 2 }, { name: 'Wed', num: 3 }, 
+            { name: 'Thu', num: 4 }, { name: 'Fri', num: 5 }, { name: 'Sat', num: 6 }, { name: 'Sun', num: 0 }
+          ]
+        %>
+        
+        <% days_map.each do |day| %>
+          <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; padding: 8px 12px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; cursor: pointer;">
+            <%= check_box_tag "practice_days[]", day[:num], active_days.include?(day[:num]) %>
+            <%= day[:name] %>
+          </label>
+        <% end %>
+      
+      <div style="margin-top: 15px;">
+        <%= f.submit "Save Practice Days", class: "btn-primary" %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="card">
+    <header class="card-header">
+      <h2>Advanced Record Override</h2>
+      <p>Force-add an attendance record with specific notes (e.g., Excused Absences).</p>
+    </header>
+
+    <%= form_with model: [:admin, @attendance], url: admin_attendances_path, method: :post, class: "toolbar", style: "margin-top: 15px;" do |f| %>
+      
+      <%= f.hidden_field :days_attended, value: 0, id: "hidden-days-input" %>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+        
+        <div style="width: 200px;">
+          <%= f.collection_select :player_id, @players, :id, :name, 
+               { prompt: "Select player..." }, 
+               { 
+                 class: "form-control", 
+                 required: true, 
+                 oninvalid: "this.setCustomValidity('Please select a player to update their record.')", 
+                 oninput: "this.setCustomValidity('')" 
+               } 
+          %>
+        </div>
+        
+        <%= f.date_field :date, value: @selected_date, class: "form-control", required: true %>
+
+        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: bold; background: #f9f9f9; padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
+          <%= f.check_box :attended, id: "override-attended-checkbox" %> Present
+        </label>
+
+        <%= f.text_field :notes, placeholder: "Optional notes...", class: "form-control", style: "flex-grow: 1; min-width: 150px;" %>
+        
+        <%= f.submit "Force Save Record", class: "btn-primary" %>
+      </div>
+    <% end %>
+  </section>
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("player-quick-search");
+    const jumpForm = document.getElementById("quick-jump-form");
+    const attendedCheckbox = document.getElementById("override-attended-checkbox");
+    const hiddenDaysInput = document.getElementById("hidden-days-input");
+
+    if (attendedCheckbox && hiddenDaysInput) {
+      hiddenDaysInput.value = attendedCheckbox.checked ? 1 : 0;
+      
+      attendedCheckbox.addEventListener("change", function() {
+        hiddenDaysInput.value = this.checked ? 1 : 0;
+      });
+    }
+
+    if (searchInput) {
+      new TomSelect(searchInput, {
+        create: false,
+        placeholder: "Type a name to search...",
+        onChange: function(value) {
+          if (value) {
+            // Instantly submit the form and redirect to the dashboard when a name is clicked
+            jumpForm.submit();
+          }
+        }
+      });
+    }
+  });
+</script>

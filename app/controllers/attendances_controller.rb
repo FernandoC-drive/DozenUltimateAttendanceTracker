@@ -84,10 +84,12 @@ class AttendancesController < ApplicationController
         @attendance.toggle_status!
       end
 
-      redirect_back(fallback_location: attendances_path, notice: "Attendance updated successfully.")
-    else
-      redirect_back(fallback_location: attendances_path, alert: "Only coaches can edit attendance.")
-    end
+      status_word = @attendance.attended ? "present" : "absent"
+
+        redirect_back(fallback_location: attendances_path, notice: "Successfully marked #{status_word}!")
+      else
+        redirect_back(fallback_location: attendances_path, alert: "Only coaches can edit attendance.")
+      end
   end
 
   private
@@ -132,7 +134,7 @@ class AttendancesController < ApplicationController
                    @selected_date.beginning_of_month..@selected_date.end_of_month
                  end
 
-    mwf_dates = (date_range.begin..date_range.end).select { |d| [1, 3, 5].include?(d.wday) }
+    mwf_dates = (date_range.begin..date_range.end).select { |d| TeamSetting.current.practice_days_ints.include?(d.wday) }
     players_to_query = @selected_player ? [@selected_player] : User.where(role: :player).order(:name)
 
     target_week_start = case @view_mode
@@ -183,6 +185,20 @@ class AttendancesController < ApplicationController
       }
     end
 
+    sort_param = params[:sort] || 'name_asc'
+    
+    case sort_param
+    when 'name_desc'
+      summary.sort_by! { |s| s[:player].name }.reverse!
+    when 'percent_asc'
+      # Sorts by percentage first, then alphabetically for ties
+      summary.sort_by! { |s| [s[:percent_attended], s[:player].name] }
+    when 'percent_desc'
+      summary.sort_by! { |s| [s[:percent_attended], s[:player].name] }.reverse!
+    else
+      summary.sort_by! { |s| s[:player].name }
+    end
+
     summary
   end
 
@@ -217,4 +233,15 @@ class AttendancesController < ApplicationController
     
     counts_by_day
   end
+
+  def update_settings
+    setting = TeamSetting.current
+    
+    # We use 'params[:practice_days] || []' so if the coach unchecks EVERY box, 
+    # it saves an empty array instead of throwing a nil error!
+    setting.update(practice_days: params[:practice_days] || [])
+    
+    redirect_back fallback_location: admin_attendances_path, notice: "Practice days updated successfully!"
+  end
+  
 end

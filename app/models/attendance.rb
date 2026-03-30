@@ -24,16 +24,20 @@ class Attendance < ApplicationRecord
   def self.monthly_percent_for(player, date)
     month_start = date.beginning_of_month
     month_end = date.end_of_month
+
+    # Ask the database which days are active
+    practice_days = TeamSetting.current.practice_days_ints
     
-    # Get all M/W/F dates in the month
-    mwf_dates = (month_start..month_end).select { |d| [1, 3, 5].include?(d.wday) }
-    total_possible_days = mwf_dates.count
-    return 0.0 if total_possible_days.zero?
+    # Filter the month down to only those specific days
+    possible_dates = (month_start..month_end).select { |d| practice_days.include?(d.wday) }
     
-    # Count days attended on M/W/F
-    month_scope = where(player: player).where(date: mwf_dates)
-    attended = month_scope.where("days_attended > 0").count
-    (attended.to_f / total_possible_days * 100).round(1)
+    return 0.0 if possible_dates.empty?
+
+    # Count how many of those specific dates the player attended
+    total_attended = where(player: player, date: possible_dates, attended: true).count
+
+    # Return the calculated percentage
+    ((total_attended.to_f / possible_dates.count) * 100).round(1)
   end
 
   def heat_level

@@ -95,14 +95,14 @@
 
   <body>
     <header class="site-header">
-      <h1 style="margin: 0; font-size: 1.5rem; color: #0f172a;">Team Attendance Dashboard</h1>
+      <h1 style="margin: 0; font-size: 1.5rem; color: #0f172a;">Dozen Ultimate Attendance Dashboard</h1>
       
       <% if current_user %>
         <nav class="nav-container">
           <%= link_to "Dashboard", root_path, class: "btn-base btn-nav" %>
           
           <% if current_user.coach? %>
-            <%= link_to "Admin Attendance", admin_attendances_path, class: "btn-base btn-nav" %>
+            <%= link_to "Admin Settings", admin_attendances_path, class: "btn-base btn-nav" %>
             <%= link_to "RecSports Sync", admin_recsports_path, class: "btn-base btn-nav" %>
             <%= button_to "View as Player", toggle_coach_path, method: :delete, form_class: "inline-form", class: "btn-base btn-mode" %>
           <% else %>

@@ -1,5 +1,7 @@
 <% content_for :title, "Attendance" %>
 
+
+
 <section class="card attendance-visualization palette-<%= @color_profile %>">
   <h2>Attendance</h2>
 
@@ -19,28 +21,97 @@
   %>
 
   <%= form_with url: attendances_path, method: :get, local: true, class: "toolbar" do |f| %>
-    <%= f.label :date, "Date" %>
-    <input type="<%= input_type %>" name="date" id="dynamic-date-input" value="<%= formatted_date %>">
+    <% 
+            step = case @view_mode
+                   when 'daily' then 1.day
+                   when 'weekly' then 1.week
+                   else 1.month
+                   end
+          %>
+          
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label title="Select the date range you want to view"><strong>Date:</strong></label>
+            <%= link_to "←", attendances_path(request.query_parameters.merge(date: (@selected_date - step).to_s)), class: "btn-arrow", title: "Previous period" %>
+            <input type="<%= input_type %>" name="date" id="date" value="<%= formatted_date %>" class="form-control" onchange="this.form.submit();" style="padding: 0.4rem; border: 1px solid #ccc; border-radius: 4px;" title="Select the date range to view">
+            <%= link_to "→", attendances_path(request.query_parameters.merge(date: (@selected_date + step).to_s)), class: "btn-arrow", title: "Next period" %>
+          </div>
 
-    <%= f.label :player_id, "Player" %>
-    <%= f.select :player_id, 
-                 options_for_select(@players.map { |p| [p.name, p.id] }, @selected_player&.id), 
-                 { include_blank: "(all)" } %>
+    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <%= f.label :player_id, "Player", title: "Filter attendance by a specific player or view the whole team" %>
+      <%= f.select :player_id, 
+                   options_for_select(@players.map { |p| [p.name, p.id] }, @selected_player&.id), 
+                   { include_blank: "(all)" },
+                   { title: "Select a specific player to view their individual stats", id: "player-select-dropdown" } %>
 
-    <%= f.label :view, "View" %>
-    <%= f.select :view, 
-                 options_for_select([["Daily", "daily"], ["Weekly", "weekly"], ["Monthly", "monthly"], ["Calendar", "calendar"]], @view_mode), 
-                 {}, { id: "view-mode-select" } %>
+      <div id="sort-controls" style="display: flex; align-items: center; gap: 8px; margin-left: 15px;">
+        <label title="Sort the team table"><strong>Sort by:</strong></label>
+        <div class="toggle-group" title="Sort the team list">
+          <% 
+            [
+              ['A-Z', 'name_asc'], 
+              ['Z-A', 'name_desc'], 
+              ['% Low-High', 'percent_asc'],
+              ['% High-Low', 'percent_desc']
+            ].each do |label, val| 
+              is_checked = params[:sort] == val || (params[:sort].blank? && val == 'name_asc')
+          %>
+            <%= radio_button_tag :sort, val, is_checked, onchange: 'this.form.submit();', class: "toggle-input", id: "sort_#{val}" %>
+            <label for="sort_<%= val %>" class="toggle-label"><%= label %></label>
+          <% end %>
+        </div>
+      </div>
+    </div>
 
-    <%= f.label :color_profile, "Color profile" %>
-    <%= f.select :color_profile, 
-                 options_for_select([["Standard", "default"], ["Red-Green Friendly", "red_green_safe"], ["Blue-Yellow Friendly", "tritanopia_safe"], ["High Contrast Monochrome", "monochrome"]], @color_profile) %>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin-top: 10px;">
+        
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label title="Select the time period format to view"><strong>View:</strong></label>
+            <div class="toggle-group" title="Toggle between Calendar, Monthly, Weekly, or Daily views">
+              <% ['calendar', 'monthly', 'weekly', 'daily'].each do |mode| %>
+                <%= radio_button_tag :view, mode, @view_mode == mode, onchange: 'this.form.submit();', class: "toggle-input", id: "view_#{mode}" %>
+                <label for="view_<%= mode %>" class="toggle-label"><%= mode.capitalize %></label>
+              <% end %>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label title="Select a colorblind-friendly palette for the heatmap"><strong>Color:</strong></label>
+            <div class="toggle-group" title="Change the colors used to display attendance data">
+              <% 
+                [
+                  ['Standard', 'default'], 
+                  ['Red-Green Friendly', 'red_green_safe'], 
+                  ['Blue-Yellow Friendly', 'tritanopia_safe'],
+                  ['Monochrome', 'monochrome']
+                ].each do |label, val| %>
+                <%= radio_button_tag :color_profile, val, @color_profile == val, onchange: 'this.form.submit();', class: "toggle-input", id: "color_#{val}" %>
+                <label for="color_<%= val %>" class="toggle-label"><%= label %></label>
+              <% end %>
+            </div>
+          </div>
+
+        </div>
                  
   <% end %>
 
+
+  <div class="heat-legend" aria-label="Attendance heatmap legend" title="Legend showing what percentage of days attended each color represents">
+    <strong>Heatmap legend:</strong>
+    <span class="legend-item"><span class="legend-swatch heat-0" aria-hidden="true"></span><span title="This color means the player has attended 0% of required days">0% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-1" aria-hidden="true"></span><span title="This color means the player has attended 1-24% of required days">1-24% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-2" aria-hidden="true"></span><span title="This color means the player has attended 25-49% of required days">25-49% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-3" aria-hidden="true"></span><span title="This color means the player has attended 50-74% of required days">50-74% attendance</span></span>
+    <span class="legend-item"><span class="legend-swatch heat-4" aria-hidden="true"></span><span title="This color means the player has attended 75-100% of required days">75-100% attendance</span></span>
+  </div>
+
   <% if @selected_player %>
     <div class="attendance-summary">
-      <strong><%= @selected_player.name %> attendance for <%= @date_range[:label] %></strong>
+      <% 
+        days_map = {0 => 'Sun', 1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat'}
+        active_day_names = TeamSetting.current.practice_days_ints.sort.map { |d| days_map[d] }.join('/')
+      %>
+      <strong><%= @selected_player.name %> attendance for <%= @selected_date.strftime("%B %Y") %> (<%= active_day_names %> only)</strong>
       <div class="progress-container" title="Monthly attendance: <%= @percent_attended %>%">
         <div class="progress-fill" style="width: <%= @percent_attended %>%;" aria-label="Monthly attendance progress: <%= @percent_attended %>%"></div>
       </div>
@@ -48,22 +119,13 @@
     </div>
   <% end %>
 
-  <div class="heat-legend" aria-label="Attendance heatmap legend">
-    <strong>Heatmap legend:</strong>
-    <span class="legend-item"><span class="legend-swatch heat-0" aria-hidden="true"></span><span>0% attendance</span></span>
-    <span class="legend-item"><span class="legend-swatch heat-1" aria-hidden="true"></span><span>1-24% attendance</span></span>
-    <span class="legend-item"><span class="legend-swatch heat-2" aria-hidden="true"></span><span>25-49% attendance</span></span>
-    <span class="legend-item"><span class="legend-swatch heat-3" aria-hidden="true"></span><span>50-74% attendance</span></span>
-    <span class="legend-item"><span class="legend-swatch heat-4" aria-hidden="true"></span><span>75-100% attendance</span></span>
-  </div>
-
   <% if @view_mode == "calendar" %>
     <% if @selected_player %>
       <table class="calendar">
         <thead>
           <tr>
             <% %w[Mon Tue Wed Thu Fri Sat Sun].each do |day| %>
-              <th><%= day %></th>
+              <th title="<%= day %>"><%= day %></th>
             <% end %>
           </tr>
         </thead>
@@ -73,36 +135,72 @@
           <% (first..last).to_a.in_groups_of(7, nil) do |week| %>
             <tr>
               <% week.each do |day| %>
-                <td class="<%= 'other-month' if day && day.month != @selected_date.month %>">
-                  <% if day %>
-                    <div class="day-number"><%= day.day %></div>
-                    <% attendance = @calendar_attendances[day] %>
+                <td class="<%= 'other-month' if day && day.month != @selected_date.month %>" style="padding: 0; vertical-align: top;">
+                <% if day %>
+                  <% 
+                    attendance = @calendar_attendances[day] 
+                    
+                    is_practice_day = TeamSetting.current.practice_days_ints.include?(day.wday)
+                    
+                    # Default to light gray for Off Days, transparent for Practice Days
+                    bg_color = is_practice_day ? "transparent" : "#f5f5f5"
+                    
+                    if attendance
+                      if attendance.attended
+                        # PRESENT COLORS
+                        bg_color = case @color_profile
+                                   when 'red_green_safe' then '#e8f0fe' 
+                                   when 'tritanopia_safe' then '#e0f2f1' 
+                                   when 'monochrome' then '#e0e0e0'  
+                                   else '#e6f4ea'                        
+                                   end
+                      else
+                        # ABSENT COLORS
+                        bg_color = case @color_profile
+                                   when 'red_green_safe' then '#fef0d9'
+                                   when 'tritanopia_safe' then '#fce8e6' 
+                                   when 'monochrome' then '#f5f5f5'   
+                                   else '#fce8e6'                       
+                                   end
+                      end
+                    end
+                  %>
+                  
+                  <div style="background-color: <%= bg_color %>; height: 100%; min-height: 100px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px;">
+                    
+                    <div class="day-number" style="font-weight: bold; color: #555;"><%= day.day %></div>
+                    
                     <% if attendance %>
                       <% if attendance.attended %>
-                        <div class="status status-pill present" title="Present on <%= day %>" aria-label="Present on <%= day %>">
+                        <div class="status status-pill present" title="Player was marked Present on <%= day.strftime('%B %d, %Y') %>" aria-label="Present on <%= day %>">
                           <span class="status-icon" aria-hidden="true">P</span>
                           <span class="status-text">Present</span>
                         </div>
                       <% else %>
-                        <div class="status status-pill absent" title="Absent on <%= day %>" aria-label="Absent on <%= day %>">
+                        <div class="status status-pill absent" title="Player was marked Absent on <%= day.strftime('%B %d, %Y') %>" aria-label="Absent on <%= day %>">
                           <span class="status-icon" aria-hidden="true">A</span>
                           <span class="status-text">Absent</span>
                         </div>
                       <% end %>
-                    <% else %>
-                      <div class="status status-pill no-data" title="No attendance entry for <%= day %>" aria-label="No attendance entry for <%= day %>">
+                    <% elsif is_practice_day %>
+                      <div class="status status-pill no-data" title="No attendance record exists for <%= day.strftime('%B %d, %Y') %>" aria-label="No attendance entry for <%= day %>">
                         <span class="status-icon" aria-hidden="true">N</span>
                         <span class="status-text">No data</span>
                       </div>
+                    <% else %>
+                      <div style="font-size: 0.8em; color: #aaa; margin-top: 5px; font-style: italic;" title="This is not a required practice day">Off Day</div>
                     <% end %>
+
                     <% if current_user.coach? %>
                       <%= button_to "Toggle", toggle_attendances_path(date: day, player_id: @selected_player.id), method: :patch,
-                                    form: { style: "display: inline-block;" },
-                                    class: "toggle-link",
-                                    style: "font-size: 0.8em; padding: 2px 5px;" %>
+                                  form: { style: "display: inline-block; margin-top: auto;" },
+                                  class: "toggle-link",
+                                  title: "Manually flip the attendance status for this date",
+                                  style: "font-size: 0.8em; padding: 2px 5px;" %>
                     <% end %>
-                  <% end %>
-                </td>
+                  </div>
+                <% end %>
+              </td>
               <% end %>
             </tr>
           <% end %>
@@ -115,7 +213,7 @@
         <thead>
           <tr>
             <% %w[Mon Tue Wed Thu Fri Sat Sun].each do |day| %>
-              <th><%= day %></th>
+              <th title="<%= day %>"><%= day %></th>
             <% end %>
           </tr>
         </thead>
@@ -125,35 +223,59 @@
           <% (first..last).to_a.in_groups_of(7, nil) do |week| %>
             <tr>
               <% week.each do |day| %>
-                <% day_class = "" %>
-                <% if day %>
-                  <% count = @attendance_counts_by_day[day] || 0 %>
-                  <% pct = @players.any? ? ((count.to_f / @players.count) * 100).round : 0 %>
-                  <% day_class = if pct == 0
-                                   "heat-0"
-                                 elsif pct < 25
-                                   "heat-1"
-                                 elsif pct < 50
-                                   "heat-2"
-                                 elsif pct < 75
-                                   "heat-3"
-                                 else
-                                   "heat-4"
-                                 end %>
-                <% else %>
-                  <% count = 0 %>
-                <% end %>
-
-                <td class="<%= ['other-month', day_class].compact.join(' ') if day %>">
+                <td class="<%= 'other-month' if day && day.month != @selected_date.month %>" style="padding: 0; vertical-align: top;">
                   <% if day %>
-                    <div class="day-number"><%= day.day %></div>
-                    <div class="attendance-count">
-                      <strong><%= count %></strong>
-                      <% if count > 0 %>
-                        <small><%= count == 1 ? "player" : "players" %></small>
-                      <% else %>
-                        <small>–</small>
-                      <% end %>
+                    <% 
+                      # Get the count for the day, and total active players
+                      count = @attendance_counts_by_day[day] || 0
+                      total_players = @players.count > 0 ? @players.count : 1
+                      
+                      # Calculate percentage
+                      percent = (count.to_f / total_players) * 100
+
+                      # Determine Heatmap Level (0 to 4)
+                      level = if count == 0
+                                0
+                              elsif percent < 25
+                                1
+                              elsif percent < 50
+                                2
+                              elsif percent < 75
+                                3
+                              else
+                                4
+                              end
+
+                      # Grab the correct Hex color from arrays [0%, 1-24%, 25-49%, 50-74%, 75-100%]
+                      bg_color = case @color_profile
+                                 when 'red_green_safe'
+                                   ['transparent', '#bbdefb', '#64b5f6', '#1e88e5', '#0d47a1'][level]
+                                 when 'tritanopia_safe'
+                                   ['transparent', '#f8bbd0', '#f06292', '#e91e63', '#880e4f'][level]
+                                 when 'monochrome'
+                                   ['transparent', '#e0e0e0', '#9e9e9e', '#616161', '#212121'][level]
+                                 else
+                                   ['transparent', '#c8e6c9', '#81c784', '#4caf50', '#1b5e20'][level]
+                                 end
+
+                      # Make sure text is readable on dark backgrounds
+                      text_color = level > 2 ? '#ffffff' : '#333333'
+                      subtext_color = level > 2 ? '#dddddd' : '#777777'
+                    %>
+                    
+                    <div style="background-color: <%= bg_color %>; height: 100%; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px;" title="<%= count %> out of <%= @players.count %> players attended on this day">
+                      
+                      <div class="day-number" style="font-weight: bold; color: <%= text_color %>;"><%= day.day %></div>
+                      
+                      <div class="attendance-count" style="color: <%= subtext_color %>; font-size: 0.9em; font-weight: 500; text-align: center;">
+                        <strong><%= count %></strong><br>
+                        <% if count > 0 %>
+                          <small><%= count == 1 ? "player" : "players" %></small>
+                        <% else %>
+                          <small>–</small>
+                        <% end %>
+                      </div>
+                      
                     </div>
                   <% end %>
                 </td>
@@ -164,15 +286,14 @@
       </table>
     <% end %>
   <% else %>
-    <!-- Summary table view for daily, weekly, and monthly modes -->
     <table>
       <thead>
         <tr>
-          <th>Player</th>
-          <th>Days Attended</th>
-          <th>Total Possible Days</th>
-          <th>Attendance %</th>
-          <th>Workout Complete (2/wk)</th>
+          <th title="Name of the player">Player</th>
+          <th title="Total number of days this player attended during this time period">Days Attended</th>
+          <th title="Total number of possible practice days during this time period">Total Possible Days</th>
+          <th title="Percentage of attended days versus total possible days">Attendance %</th>
+          <th title="Players must log at least 2 workouts per week to receive a checkmark.">Workout Complete (2/wk)</th>
         </tr>
       </thead>
       <tbody>
@@ -189,7 +310,12 @@
                         else "heat-4"
                         end %>
           <tr class="<%= heat_class %>">
-            <td><%= summary[:player].name %></td>
+            <td>
+              <%= link_to summary[:player].name, 
+                          attendances_path(request.query_parameters.merge(player_id: summary[:player].id, view: 'calendar')), 
+                          class: "player-name-link", 
+                          title: "Click to view #{summary[:player].name}'s detailed calendar" %>
+            </td>
             <td><%= summary[:total_days_attended] %></td>
             <td><%= summary[:total_possible_days] %></td>
             <td><%= summary[:percent_attended] %>%</td>
@@ -201,10 +327,10 @@
                 <%= form_with url: toggle_workout_complete_attendances_path, method: :post, local: true, style: 'display:inline' do |f| %>
                   <%= hidden_field_tag :player_id, summary[:player].id %>
                   <%= hidden_field_tag :week_start, week_start %>
-                  <%= check_box_tag 'complete', '1', completed, onchange: 'this.form.submit();' %>
+                  <%= check_box_tag 'complete', '1', completed, onchange: 'this.form.submit();', title: "Manually override this player's weekly workout status" %>
                 <% end %>
               <% else %>
-                <%= completed ? '✅' : '❌' %>
+                <span title="<%= completed ? 'Weekly workouts completed successfully' : 'Incomplete weekly workouts' %>"><%= completed ? '✅' : '❌' %></span>
               <% end %>
             </td>
           </tr>
@@ -216,15 +342,15 @@
           <td><%= total_attended %></td>
           <td><%= total_possible %></td>
           <td><%= total_possible > 0 ? ((total_attended.to_f / total_possible) * 100).round(1) : 0.0 %>%</td>
+          <td></td>
         </tr>
       </tfoot>
     </table>
   <% end %>
 </section>
 
-<!-- THE SCRAPING SECTION -->
 <section class="card">
-  <header class="card-header">
+  <header class="card-header" title="Data automatically synced from RecSports">
     <h2>Imported Practice Rosters</h2>
     <p>Latest participant lists scraped from the Sport Clubs event pages.</p>
   </header>
@@ -251,10 +377,9 @@
   <% end %>
 </section>
 
-<!-- SPECIFIC PLAYER IS SELECTED FROM THE DROPDOWN -->
 <% if @selected_player %>
   <section class="card workout-card">
-    <header class="card-header">
+    <header class="card-header" title="View and manage workout check-ins for this player">
       <h2><%= @selected_player.name %>'s Workout Tracker</h2>
       <p>Workout history and check-ins for <%= @selected_player.name %>.</p>
     </header>
@@ -264,40 +389,39 @@
         <%= f.hidden_field :player_id, value: @selected_player.id %>
         <div class="form-group">
           <%= f.label :workout_date, "Date Completed", class: "form-label" %>
-          <%= f.date_field :workout_date, required: true, max: Date.today, class: "form-control" %>
+          <%= f.date_field :workout_date, required: true, max: Date.today, class: "form-control", title: "Select the date you completed this workout" %>
         </div>
 
         <div class="form-group">
           <%= f.label :proof_url, "Proof of Workout (URL)", class: "form-label" %>
-          <%= f.url_field :proof_url, placeholder: "https://...", class: "form-control" %>
+          <%= f.url_field :proof_url, placeholder: "https://...", class: "form-control", title: "Paste a valid URL linking to your workout proof (e.g., Strava)" %>
         </div>
 
         <div class="form-group" style="margin-top: 10px;">
           <%= f.label :proof_image, "Or Upload an Image", class: "form-label" %>
-          <%= f.file_field :proof_image, class: "form-control", id: "workout-file-input", accept: "image/*" %>
+          <%= f.file_field :proof_image, class: "form-control", id: "workout-file-input", accept: "image/*", title: "Upload a screenshot of your workout summary" %>
           <p id="size-error" class="error-text" style="display: none; color: #d9534f; margin-top: 5px;">Error: File too large (max 5MB).</p>
         </div>
 
         <div id="preview-container" style="display: none; margin-top: 10px; padding: 10px; border: 1px dashed #ccc; border-radius: 4px;">
           <img id="image-preview" src="#" alt="Selected preview" style="max-height: 150px; max-width: 100%; display: block; margin-bottom: 10px; border-radius: 4px;">
-          <button type="button" id="clear-image-btn" style="background: none; border: 1px solid #d9534f; color: #d9534f; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Remove Selected Image</button>
+          <button type="button" id="clear-image-btn" style="background: none; border: 1px solid #d9534f; color: #d9534f; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.85em;" title="Clear the selected image">Remove Selected Image</button>
         </div>
 
         <div class="form-actions">
-          <%= f.submit "Save Workout", class: "btn-primary", id: "workout-submit-button" %>
+          <%= f.submit "Save Workout", class: "btn-primary", id: "workout-submit-button", title: "Submit this workout for coach review" %>
         </div>
       <% end %>
     <% end %>
 
 
 
-    <!-- Shared History: Both coaches and the player can see this history -->
     <div class="workout-history">
       <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <%= link_to "← Previous", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
+        <%= link_to "← Previous", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;", title: "View previous month's workouts" %>
         <h3 style="margin: 0;"><%= @workout_month.strftime("%B %Y") %></h3>
         <% if @workout_month.beginning_of_month < Date.today.beginning_of_month %>
-          <%= link_to "Next →", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
+          <%= link_to "Next →", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;", title: "View next month's workouts" %>
         <% else %>
           <span class="text-muted" style="opacity: 0.5;">Next →</span>
         <% end %>
@@ -306,7 +430,6 @@
       <% if @workout_checkins.present? %>
           <div class="history-groups" style="display: flex; flex-direction: column; gap: 20px;">
             
-            <!-- Group check-ins by their Monday, sort newest week first -->
             <% @workout_checkins.group_by { |c| c.workout_date.beginning_of_week(:monday) }.sort.reverse.each do |week_start, checkins| %>
               <div class="week-group">
                 <h4 style="margin: 0 0 10px 0; border-bottom: 2px solid #eee; padding-bottom: 5px;">
@@ -322,24 +445,23 @@
                   %>
 
                   <% checkins.each do |checkin| %>
-                    <!-- If overridden, apply a gray-out filter and lower opacity -->
                     <li class="history-item" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; <%= 'opacity: 0.5; filter: grayscale(100%); pointer-events: none;' if is_overridden %>">
                       
                       <strong><%= checkin.workout_date.strftime("%a, %b %d") %></strong> 
                       
                       <% if checkin.proof_image.attached? %>
                         <%= image_tag checkin.proof_image, style: "width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;" %>
-                        <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em; #{'pointer-events: auto;' if is_overridden}" %>
+                        <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em; #{'pointer-events: auto;' if is_overridden}", title: "Open the full uploaded image in a new tab" %>
                       <% elsif checkin.proof_url.present? %>
-                        - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link", style: "#{'pointer-events: auto;' if is_overridden}" %>
+                        - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link", style: "#{'pointer-events: auto;' if is_overridden}", title: "Open the provided workout link in a new tab" %>
                       <% else %>
                         - <span class="text-muted">No proof provided</span>
                       <% end %>
 
                       <% unless is_overridden %>
-                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;" %>
+                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;", title: "Permanently delete this workout check-in" %>
                       <% else %>
-                        <span style="margin-left: auto; color: #d9534f; font-size: 0.8em; font-weight: bold;">Rejected by Coach</span>
+                        <span style="margin-left: auto; color: #d9534f; font-size: 0.8em; font-weight: bold;" title="A coach has marked this week's workouts as incomplete">Rejected by Coach</span>
                       <% end %>
                     </li>
                   <% end %>
@@ -354,12 +476,10 @@
     </div>
   </section>
 
-<!-- NO PLAYER IS SELECTED -->
 <% else %>
-  <!-- If no player is selected, coaches see nothing down here (they use the master table). Players see their own log. -->
   <% if current_user.player? %>
     <section class="card workout-card">
-      <header class="card-header">
+      <header class="card-header" title="Submit a new workout for coach review">
         <h2>Log a Workout</h2>
         <p>Submit your workout date and a link to your proof.</p>
       </header>
@@ -367,36 +487,36 @@
       <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path, local: true, class: "workout-form" do |f| %>
         <div class="form-group">
           <%= f.label :workout_date, "Date Completed", class: "form-label" %>
-          <%= f.date_field :workout_date, required: true, max: Date.today, class: "form-control" %>
+          <%= f.date_field :workout_date, required: true, max: Date.today, class: "form-control", title: "Select the date you completed this workout" %>
         </div>
 
         <div class="form-group">
           <%= f.label :proof_url, "Proof of Workout (URL)", class: "form-label" %>
-          <%= f.url_field :proof_url, placeholder: "https://...", class: "form-control" %>
+          <%= f.url_field :proof_url, placeholder: "https://...", class: "form-control", title: "Paste a valid URL linking to your workout proof (e.g., Strava)" %>
         </div>
 
         <div class="form-group" style="margin-top: 10px;">
           <%= f.label :proof_image, "Or Upload an Image", class: "form-label" %>
-          <%= f.file_field :proof_image, class: "form-control", id: "workout-file-input", accept: "image/*" %>
+          <%= f.file_field :proof_image, class: "form-control", id: "workout-file-input", accept: "image/*", title: "Upload a screenshot of your workout summary" %>
           <p id="size-error" class="error-text" style="display: none; color: #d9534f; margin-top: 5px;">Error: File too large (max 5MB).</p>
         </div>
 
         <div id="preview-container" style="display: none; margin-top: 10px; padding: 10px; border: 1px dashed #ccc; border-radius: 4px;">
           <img id="image-preview" src="#" alt="Selected preview" style="max-height: 150px; max-width: 100%; display: block; margin-bottom: 10px; border-radius: 4px;">
-          <button type="button" id="clear-image-btn" style="background: none; border: 1px solid #d9534f; color: #d9534f; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Remove Selected Image</button>
+          <button type="button" id="clear-image-btn" style="background: none; border: 1px solid #d9534f; color: #d9534f; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.85em;" title="Clear the selected image">Remove Selected Image</button>
         </div>
 
         <div class="form-actions">
-          <%= f.submit "Save Workout", class: "btn-primary", id: "workout-tracker-button" %>
+          <%= f.submit "Save Workout", class: "btn-primary", id: "workout-tracker-button", title: "Submit this workout for coach review" %>
         </div>
       <% end %>
 
       <div class="workout-history">
         <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <%= link_to "← Previous", attendances_path(workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
+          <%= link_to "← Previous", attendances_path(workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;", title: "View previous month's workouts" %>
           <h3 style="margin: 0;"><%= @workout_month.strftime("%B %Y") %></h3>
           <% if @workout_month.beginning_of_month < Date.today.beginning_of_month %>
-            <%= link_to "Next →", attendances_path(workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;" %>
+            <%= link_to "Next →", attendances_path(workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;", title: "View next month's workouts" %>
           <% else %>
             <span class="text-muted" style="opacity: 0.5;">Next →</span>
           <% end %>
@@ -405,7 +525,6 @@
         <% if @workout_checkins.present? %>
           <div class="history-groups" style="display: flex; flex-direction: column; gap: 20px;">
             
-            <!-- Group check-ins by their Monday, sort newest week first -->
             <% @workout_checkins.group_by { |c| c.workout_date.beginning_of_week(:monday) }.sort.reverse.each do |week_start, checkins| %>
               <div class="week-group">
                 <h4 style="margin: 0 0 10px 0; border-bottom: 2px solid #eee; padding-bottom: 5px;">
@@ -421,24 +540,23 @@
                   %>
 
                   <% checkins.each do |checkin| %>
-                    <!-- If overridden, apply a gray-out filter and lower opacity -->
                     <li class="history-item" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; <%= 'opacity: 0.5; filter: grayscale(100%); pointer-events: none;' if is_overridden %>">
                       
                       <strong><%= checkin.workout_date.strftime("%a, %b %d") %></strong> 
                       
                       <% if checkin.proof_image.attached? %>
                         <%= image_tag checkin.proof_image, style: "width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;" %>
-                        <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em; #{'pointer-events: auto;' if is_overridden}" %>
+                        <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em; #{'pointer-events: auto;' if is_overridden}", title: "Open the full uploaded image in a new tab" %>
                       <% elsif checkin.proof_url.present? %>
-                        - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link", style: "#{'pointer-events: auto;' if is_overridden}" %>
+                        - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link", style: "#{'pointer-events: auto;' if is_overridden}", title: "Open the provided workout link in a new tab" %>
                       <% else %>
                         - <span class="text-muted">No proof provided</span>
                       <% end %>
 
                       <% unless is_overridden %>
-                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;" %>
+                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;", title: "Permanently delete this workout check-in" %>
                       <% else %>
-                        <span style="margin-left: auto; color: #d9534f; font-size: 0.8em; font-weight: bold;">Rejected by Coach</span>
+                        <span style="margin-left: auto; color: #d9534f; font-size: 0.8em; font-weight: bold;" title="A coach has marked this week's workouts as incomplete">Rejected by Coach</span>
                       <% end %>
                     </li>
                   <% end %>
@@ -466,6 +584,8 @@
     const viewSelect = document.getElementById("view-mode-select");
     const dateInput = document.getElementById("dynamic-date-input");
     const toolbarForm = document.querySelector('.toolbar');
+    const playerSelectDropdown = document.getElementById("player-select-dropdown");
+    const sortControls = document.getElementById("sort-controls");
 
     if (viewSelect && dateInput) {
       viewSelect.addEventListener("change", function () {
@@ -481,6 +601,18 @@
           dateInput.type = "date";
         }
       });
+    }
+
+    function toggleSortVisibility() {
+      if (playerSelectDropdown && sortControls) {
+        // If value is empty (the "all" option), show the sort buttons. Otherwise, hide them.
+        sortControls.style.display = playerSelectDropdown.value === "" ? "flex" : "none";
+      }
+    }
+
+    if (playerSelectDropdown) {
+      playerSelectDropdown.addEventListener("change", toggleSortVisibility);
+      toggleSortVisibility(); // Run once immediately on page load
     }
 
     if (toolbarForm) {
