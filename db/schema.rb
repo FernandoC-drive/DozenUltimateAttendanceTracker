@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_02_230207) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_29_151334) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "admins", force: :cascade do |t|
     t.string "email", default: "", null: false
@@ -68,6 +96,41 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_02_230207) do
     t.text "last_error"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "browser_sync_token"
+    t.index ["browser_sync_token"], name: "index_recsports_credentials_on_browser_sync_token", unique: true
+  end
+
+  create_table "recsports_event_participants", force: :cascade do |t|
+    t.bigint "recsports_event_id", null: false
+    t.bigint "user_id", null: false
+    t.string "first_name", null: false
+    t.string "last_name", null: false
+    t.string "recsports_uin"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["recsports_event_id", "recsports_uin"], name: "index_recsports_participants_on_event_and_uin"
+    t.index ["recsports_event_id", "user_id"], name: "index_recsports_participants_on_event_and_user", unique: true
+    t.index ["recsports_event_id"], name: "index_recsports_event_participants_on_recsports_event_id"
+    t.index ["user_id"], name: "index_recsports_event_participants_on_user_id"
+  end
+
+  create_table "recsports_events", force: :cascade do |t|
+    t.string "title", null: false
+    t.string "event_type"
+    t.string "venue"
+    t.datetime "starts_at"
+    t.datetime "ends_at"
+    t.string "source_url", null: false
+    t.string "external_id"
+    t.string "created_by_name"
+    t.string "created_by_email"
+    t.datetime "source_created_at"
+    t.datetime "synced_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["external_id"], name: "index_recsports_events_on_external_id"
+    t.index ["source_url"], name: "index_recsports_events_on_source_url", unique: true
   end
 
   create_table "users", force: :cascade do |t|
@@ -79,7 +142,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_02_230207) do
     t.datetime "updated_at", null: false
     t.string "uid"
     t.string "avatar_url"
+    t.string "recsports_uin"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["recsports_uin"], name: "index_users_on_recsports_uin", unique: true
   end
 
   create_table "weekly_workouts", force: :cascade do |t|
@@ -103,8 +168,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_02_230207) do
     t.index ["player_id"], name: "index_workout_checkins_on_player_id"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "attendance_records", "members"
   add_foreign_key "attendances", "users", column: "player_id"
+  add_foreign_key "recsports_event_participants", "recsports_events"
+  add_foreign_key "recsports_event_participants", "users"
   add_foreign_key "weekly_workouts", "users", column: "player_id"
   add_foreign_key "workout_checkins", "users", column: "player_id"
 end

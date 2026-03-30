@@ -20,13 +20,20 @@ class Attendance < ApplicationRecord
   scope :for_month, ->(date) { where(date: date.beginning_of_month..date.end_of_month) }
 
   # returns percentage of days attended for a given player/month (0.0..100.0)
+  # only counts Monday, Wednesday, and Friday
   def self.monthly_percent_for(player, date)
-    month_scope = where(player: player).for_month(date)
-    total_days = date.end_of_month.day
-    return 0.0 if total_days.zero?
-
+    month_start = date.beginning_of_month
+    month_end = date.end_of_month
+    
+    # Get all M/W/F dates in the month
+    mwf_dates = (month_start..month_end).select { |d| [1, 3, 5].include?(d.wday) }
+    total_possible_days = mwf_dates.count
+    return 0.0 if total_possible_days.zero?
+    
+    # Count days attended on M/W/F
+    month_scope = where(player: player).where(date: mwf_dates)
     attended = month_scope.where("days_attended > 0").count
-    (attended.to_f / total_days * 100).round(1)
+    (attended.to_f / total_possible_days * 100).round(1)
   end
 
   def heat_level

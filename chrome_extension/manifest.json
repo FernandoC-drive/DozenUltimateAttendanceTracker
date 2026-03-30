@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "RecSports Attendance Sync",
+  "version": "0.1.0",
+  "description": "Scrape authenticated TAMU Sport Clubs event rosters and sync them into the attendance app.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://sportclubs.tamu.edu/*",
+    "http://localhost:3000/*",
+    "https://*/*",
+    "http://*/*"
+  ],
+  "action": {
+    "default_title": "RecSports Attendance Sync",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://sportclubs.tamu.edu/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -276,7 +276,8 @@ Devise.setup do |config|
   # up on your models and hooks.
   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
   config.omniauth :google_oauth2, ENV['GOOGLE_OAUTH_CLIENT_ID'], ENV['GOOGLE_OAUTH_CLIENT_SECRET'], {
-    prompt: 'select_account'
+    prompt: 'select_account',
+    hd: 'tamu.edu'
   }
 
   # Kicks the user out if they haven't made a request in 24 hours
