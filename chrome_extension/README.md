@@ -2,10 +2,13 @@
 
 ## Load the extension
 
-1. Open Chrome and go to `chrome://extensions`.
-2. Turn on `Developer mode`.
-3. Click `Load unpacked`.
-4. Select the `chrome_extension` folder from this repo.
+1. Sign in to the attendance app as a coach and open `RecSports Sync`.
+2. Click `Download Chrome extension`.
+3. Unzip the downloaded file on your computer.
+4. Open Chrome and go to `chrome://extensions`.
+5. Turn on `Developer mode`.
+6. Click `Load unpacked`.
+7. Select the extracted `recsports_chrome_extension` folder.
 
 ## Use the extension
 

@@ -1,3 +1,5 @@
+require "zip"
+
 module Admin
   class RecsportsController < BaseController
     skip_forgery_protection only: :browser_sync
@@ -9,6 +11,15 @@ module Admin
       @credential = RecsportsCredential.first_or_initialize(access_mode: :shared_credentials)
       @credential.valid?
       @recent_events = RecsportsEvent.includes(participants: :user).recent_first.limit(10)
+    end
+
+    def download_extension
+      send_data(
+        chrome_extension_archive,
+        filename: chrome_extension_filename,
+        type: "application/zip",
+        disposition: "attachment"
+      )
     end
 
     def update
@@ -130,6 +141,34 @@ module Admin
       response.set_header("Access-Control-Allow-Origin", "*")
       response.set_header("Access-Control-Allow-Methods", "POST, OPTIONS")
       response.set_header("Access-Control-Allow-Headers", "Content-Type")
+    end
+
+    def chrome_extension_archive
+      buffer = Zip::OutputStream.write_buffer do |zip|
+        chrome_extension_source_files.each do |path|
+          relative_path = Pathname.new(path).relative_path_from(chrome_extension_root).to_s
+          zip.put_next_entry(File.join("recsports_chrome_extension", relative_path))
+          zip.write(File.binread(path))
+        end
+      end
+
+      buffer.rewind
+      buffer.sysread
+    end
+
+    def chrome_extension_filename
+      version = JSON.parse(File.read(chrome_extension_root.join("manifest.json")))["version"]
+      "recsports-chrome-extension-v#{version}.zip"
+    rescue StandardError
+      "recsports-chrome-extension.zip"
+    end
+
+    def chrome_extension_source_files
+      Dir.glob(chrome_extension_root.join("**", "*")).select { |path| File.file?(path) }.sort
+    end
+
+    def chrome_extension_root
+      Rails.root.join("chrome_extension")
     end
   end
 end
