@@ -81,3 +81,4 @@ gem 'omniauth-rails_csrf_protection'
 gem 'faker'
 gem "nokogiri"
 gem 'active_storage_validations'
+gem "rubyzip"

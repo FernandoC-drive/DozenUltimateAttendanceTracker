@@ -69,13 +69,14 @@ https://sportclubs.tamu.edu/home/userClubs
 4. Set `Access mode` to `Browser assisted`.
 5. Save the settings.
 6. Copy the `Browser Sync Token` shown on the page.
-7. Load the unpacked Chrome extension from the repo's `chrome_extension` folder.
-8. In Chrome, sign in to TAMU Sport Clubs and open the authenticated `Home Events` page.
-9. Open the extension popup.
-10. Enter:
+7. Download the Chrome extension zip from the `RecSports Sync` page.
+8. Unzip it locally and load the unpacked `recsports_chrome_extension` folder in Chrome.
+9. In Chrome, sign in to TAMU Sport Clubs and open the authenticated `Home Events` page.
+10. Open the extension popup.
+11. Enter:
     - your attendance app URL
     - the browser sync token
-11. Click `Sync Current Tab`.
+12. Click `Sync Current Tab`.
 
 What the sync does:
 
@@ -94,11 +95,12 @@ Imported rosters appear on the main attendance dashboard under `Imported Practic
 3. Confirm the success flash says `Attendance updated successfully.`
 4. Enter `-1` or `abc` for attendance input and confirm validation blocks it.
 5. Open `RecSports Sync`, configure browser-assisted mode, and save the settings.
-6. Load the Chrome extension from the repo.
-7. Sign in to Sport Clubs, open Home Events, and run `Sync Current Tab` from the extension.
-8. Return to the dashboard and confirm imported rosters appear.
-9. Sign out and sign in as player.
-10. Confirm attendance still appears correctly on the player dashboard.
+6. Download the Chrome extension zip from the `RecSports Sync` page.
+7. Unzip it locally and load the unpacked `recsports_chrome_extension` folder in Chrome.
+8. Sign in to Sport Clubs, open Home Events, and run `Sync Current Tab` from the extension.
+9. Return to the dashboard and confirm imported rosters appear.
+10. Sign out and sign in as player.
+11. Confirm attendance still appears correctly on the player dashboard.
 
 ## Accessibility verification checks
 

@@ -16,6 +16,7 @@ Rails.application.routes.draw do
     end
 
     resource :recsports, only: %i[show update] do
+      get :download_extension
       post :test_access
       post :sync_now
       post :browser_sync

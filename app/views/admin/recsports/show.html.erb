@@ -54,8 +54,16 @@
 
   <p>Use this mode when Sport Clubs requires Microsoft sign-in and Duo. Save the credential with access mode set to <code>Browser assisted</code>, then use the Chrome extension from an already-authenticated Sport Clubs tab.</p>
 
+  <div class="toolbar">
+    <%= link_to "Download Chrome extension", download_extension_admin_recsports_path, class: "button" %>
+  </div>
+
   <ol>
-    <li>Load the unpacked extension from the repo's <code>chrome_extension</code> folder.</li>
+    <li>Download the Chrome extension zip from this page.</li>
+    <li>Unzip it on your computer.</li>
+    <li>Open Chrome and go to <code>chrome://extensions</code>.</li>
+    <li>Turn on <code>Developer mode</code> and click <code>Load unpacked</code>.</li>
+    <li>Select the extracted <code>recsports_chrome_extension</code> folder.</li>
     <li>Open the authenticated TAMU Sport Clubs Home Events page in Chrome.</li>
     <li>Open the extension popup.</li>
     <li>Enter your attendance app URL and the token below.</li>
