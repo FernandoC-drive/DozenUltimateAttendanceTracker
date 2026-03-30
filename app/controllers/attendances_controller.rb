@@ -154,7 +154,6 @@ class AttendancesController < ApplicationController
     end
   end
 
-
   def calculate_attendance_summary(scope)
     date_range = case @view_mode
                  when "daily"
