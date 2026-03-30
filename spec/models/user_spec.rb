@@ -1,6 +1,29 @@
 require 'rails_helper'
 
 RSpec.describe User, type: :model do
+  describe "email validation" do
+    it "allows imported RecSports placeholder emails" do
+      user = User.new(
+        email: "recsports-player-123@attendance.local",
+        name: "Imported Player",
+        password: "password123"
+      )
+
+      expect(user).to be_valid
+    end
+
+    it "rejects non-TAMU non-import emails" do
+      user = User.new(
+        email: "player@gmail.com",
+        name: "Outside User",
+        password: "password123"
+      )
+
+      expect(user).not_to be_valid
+      expect(user.errors[:email]).to include("must be a @tamu.edu account")
+    end
+  end
+
   describe ".from_google" do
     let(:google_data) do
       {
