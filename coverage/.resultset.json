@@ -1,7 +1,7 @@
 {
   "RSpec": {
     "coverage": {
-      "/csce431/app/controllers/application_controller.rb": {
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/controllers/application_controller.rb": {
         "lines": [
           0,
           0,
@@ -19,7 +19,7 @@
         ],
         "branches": {}
       },
-      "/csce431/app/controllers/attendances_controller.rb": {
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/controllers/attendances_controller.rb": {
         "lines": [
           0,
           null,
@@ -256,11 +256,22 @@
           null,
           0,
           0,
+          null,
+          0,
+          0,
+          null,
+          null,
+          null,
+          0,
+          null,
+          0,
+          0,
+          null,
           0
         ],
         "branches": {}
       },
-      "/csce431/app/controllers/roles_controller.rb": {
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/controllers/roles_controller.rb": {
         "lines": [
           0,
           0,
@@ -283,7 +294,7 @@
         ],
         "branches": {}
       },
-      "/csce431/app/controllers/sessions_controller.rb": {
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/controllers/sessions_controller.rb": {
         "lines": [
           0,
           0,
@@ -310,7 +321,7 @@
         ],
         "branches": {}
       },
-      "/csce431/app/controllers/users/omniauth_callbacks_controller.rb": {
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/controllers/users/omniauth_callbacks_controller.rb": {
         "lines": [
           0,
           0,
@@ -344,7 +355,7 @@
         ],
         "branches": {}
       },
-      "/csce431/app/controllers/workout_checkins_controller.rb": {
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/controllers/workout_checkins_controller.rb": {
         "lines": [
           0,
           0,
@@ -394,7 +405,7 @@
         ],
         "branches": {}
       },
-      "/csce431/app/models/application_record.rb": {
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/models/application_record.rb": {
         "lines": [
           0,
           0,
@@ -402,93 +413,7 @@
         ],
         "branches": {}
       },
-      "/csce431/app/models/attendance.rb": {
-        "lines": [
-          0,
-          0,
-          null,
-          0,
-          null,
-          0,
-          0,
-          0,
-          null,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          null,
-          0,
-          0,
-          0,
-          null,
-          null,
-          null,
-          0,
-          0,
-          0,
-          null,
-          null,
-          0,
-          0,
-          0,
-          null,
-          null,
-          0,
-          0,
-          0,
-          0,
-          null,
-          0,
-          null,
-          0,
-          0,
-          0
-        ],
-        "branches": {}
-      },
-      "/csce431/app/models/recsports_event.rb": {
-        "lines": [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          null,
-          0,
-          null,
-          0,
-          null,
-          0,
-          0,
-          0,
-          0
-        ],
-        "branches": {}
-      },
-      "/csce431/app/models/recsports_event_participant.rb": {
-        "lines": [
-          0,
-          0,
-          0,
-          null,
-          0,
-          0
-        ],
-        "branches": {}
-      },
-      "/csce431/app/models/team_setting.rb": {
-        "lines": [
-          0,
-          0
-        ],
-        "branches": {}
-      },
-      "/csce431/app/models/user.rb": {
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/models/attendance.rb": {
         "lines": [
           0,
           0,
@@ -505,6 +430,105 @@
           0,
           0,
           0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          null,
+          null,
+          null,
+          0,
+          0,
+          0,
+          null,
+          null,
+          0,
+          null,
+          null,
+          0,
+          null,
+          0,
+          null,
+          null,
+          0,
+          null,
+          null,
+          0,
+          0,
+          null,
+          0,
+          null,
+          0,
+          0,
+          0
+        ],
+        "branches": {}
+      },
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/models/recsports_event.rb": {
+        "lines": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          null,
+          0,
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ],
+        "branches": {}
+      },
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/models/recsports_event_participant.rb": {
+        "lines": [
+          0,
+          0,
+          0,
+          null,
+          0,
+          0
+        ],
+        "branches": {}
+      },
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/models/team_setting.rb": {
+        "lines": [
+          0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ],
+        "branches": {}
+      },
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/models/user.rb": {
+        "lines": [
+          0,
+          0,
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           null,
           0,
           null,
@@ -533,7 +557,7 @@
         ],
         "branches": {}
       },
-      "/csce431/app/models/workout_checkin.rb": {
+      "C:/Users/ethan/DozenUltimateAttendanceTracker/app/models/workout_checkin.rb": {
         "lines": [
           0,
           0,
@@ -579,6 +603,6 @@
         "branches": {}
       }
     },
-    "timestamp": 1774901639
+    "timestamp": 1774906954
   }
 }

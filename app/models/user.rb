@@ -8,9 +8,9 @@ class User < ApplicationRecord
   has_many :recsports_event_participants, dependent: :destroy, inverse_of: :user
 
   validates :name, :email, presence: true
-  validates :email, uniqueness: true, format: { 
-    with: /\A.+@tamu\.edu\z/i, 
-    message: "must be a @tamu.edu account" 
+  validates :email, uniqueness: true, format: {
+    with: /\A.+@(tamu\.edu|attendance\.local)\z/i,
+    message: "must be a @tamu.edu account"
   }
   validates :recsports_uin, uniqueness: true, allow_blank: true
 
