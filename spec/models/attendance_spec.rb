@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe Attendance, type: :model do
-  # Set up a default player for the tests
   let(:player) { User.create!(name: "Test Player", email: "test@tamu.edu", password: "password", role: 0) }
 
   describe "validations" do
@@ -51,12 +50,24 @@ RSpec.describe Attendance, type: :model do
     end
   end
 
+  describe "#toggle_status!" do
+    it "toggles an existing attendance back to an absence" do
+      attendance = Attendance.create!(player: player, date: Date.today, days_attended: 1, attended: true)
+
+      attendance.toggle_status!
+
+      expect(attendance.reload.days_attended).to eq(0)
+      expect(attendance.attended).to be false
+    end
+  end
+
   describe "scopes" do
     let(:player) { User.create!(name: "Test", email: "test@tamu.edu", password: "password") }
     
     it "filters by day, week, and month" do
       today = Date.current
       attendance = Attendance.create!(player: player, date: today, days_attended: 1)
+      duplicate = Attendance.new(player: player, date: today, days_attended: 2)
       
       expect(duplicate).not_to be_valid
       expect(duplicate.errors[:date]).to include("has already been taken") 
@@ -72,8 +83,6 @@ RSpec.describe Attendance, type: :model do
     end
 
     it "calculates the correct percentage" do
-      # february 2026 has 28 days
-      # we'll mark 14 days attended
       (1..14).each do |d|
         Attendance.create!(player: player, date: base_date.change(day: d), attended: true, days_attended: 1)
       end
@@ -81,7 +90,6 @@ RSpec.describe Attendance, type: :model do
     end
 
     it "rounds to one decimal place" do
-      # create 1 out of 3-day month artificially by using march (31 days) but only 1 record
       date = Date.new(2026, 3, 1)
       Attendance.create!(player: player, date: date, attended: true, days_attended: 1)
       expected = (1.0 / 31 * 100).round(1)

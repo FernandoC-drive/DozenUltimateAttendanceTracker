@@ -33,5 +33,18 @@ RSpec.describe User, type: :model do
       expect(existing_user.name).to eq('Test Aggie')
       expect(existing_user.uid).to eq('111222333')
     end
+
+    it "automatically promotes whitelisted emails to coach" do
+      allow(ENV).to receive(:fetch).with('COACH_EMAILS', '').and_return('headcoach@tamu.edu')
+
+      user = User.from_google(
+        email: 'headcoach@tamu.edu',
+        full_name: 'Coach Jim',
+        uid: '123456',
+        avatar_url: 'avatar.png'
+      )
+      
+      expect(user.role).to eq('coach')
+    end
   end
 end

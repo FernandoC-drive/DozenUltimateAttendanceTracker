@@ -57,12 +57,9 @@ class AttendancesController < ApplicationController
     @workout_checkins = if @selected_player
                           # When viewing a specific player, show their workout checkins
                           @selected_player.workout_checkins.where(workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month)
-                        elsif current_user.coach?
-                          # Coaches don't see workout checkins
-                          WorkoutCheckin.none
                         else
-                          # Current user viewing all players sees their own workout checkins
-                          current_user.workout_checkins.where(workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month)
+                          # If no player is selected, show nothing
+                          WorkoutCheckin.none
                         end
   end
 
