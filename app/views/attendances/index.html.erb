@@ -1,7 +1,5 @@
 <% content_for :title, "Attendance" %>
 
-
-
 <section class="card attendance-visualization palette-<%= @color_profile %>">
   <h2>Attendance</h2>
 
@@ -69,7 +67,7 @@
             <label title="Select the time period format to view"><strong>View:</strong></label>
             <div class="toggle-group" title="Toggle between Calendar, Monthly, Weekly, or Daily views">
               <% ['calendar', 'monthly', 'weekly', 'daily'].each do |mode| %>
-                <%= radio_button_tag :view, mode, @view_mode == mode, onchange: 'this.form.submit();', class: "toggle-input", id: "view_#{mode}" %>
+                <%= radio_button_tag :view, mode, @view_mode == mode, onchange: 'document.getElementById("date").value=""; this.form.submit();', class: "toggle-input", id: "view_#{mode}" %>
                 <label for="view_<%= mode %>" class="toggle-label"><%= mode.capitalize %></label>
               <% end %>
             </div>
@@ -84,7 +82,8 @@
                   ['Red-Green Friendly', 'red_green_safe'], 
                   ['Blue-Yellow Friendly', 'tritanopia_safe'],
                   ['Monochrome', 'monochrome']
-                ].each do |label, val| %>
+                ].each do |label, val|
+              %>
                 <%= radio_button_tag :color_profile, val, @color_profile == val, onchange: 'this.form.submit();', class: "toggle-input", id: "color_#{val}" %>
                 <label for="color_<%= val %>" class="toggle-label"><%= label %></label>
               <% end %>
@@ -139,7 +138,6 @@
                 <% if day %>
                   <% 
                     attendance = @calendar_attendances[day] 
-                    
                     is_practice_day = TeamSetting.current.practice_days_ints.include?(day.wday)
                     
                     # Default to light gray for Off Days, transparent for Practice Days
@@ -152,7 +150,7 @@
                                    when 'red_green_safe' then '#e8f0fe' 
                                    when 'tritanopia_safe' then '#e0f2f1' 
                                    when 'monochrome' then '#e0e0e0'  
-                                   else '#e6f4ea'                        
+                                   else '#e6f4ea'                    
                                    end
                       else
                         # ABSENT COLORS
@@ -581,27 +579,9 @@
     const imagePreview = document.getElementById("image-preview");
     const clearBtn = document.getElementById("clear-image-btn");
     const sizeError = document.getElementById("size-error");
-    const viewSelect = document.getElementById("view-mode-select");
-    const dateInput = document.getElementById("dynamic-date-input");
     const toolbarForm = document.querySelector('.toolbar');
     const playerSelectDropdown = document.getElementById("player-select-dropdown");
     const sortControls = document.getElementById("sort-controls");
-
-    if (viewSelect && dateInput) {
-      viewSelect.addEventListener("change", function () {
-        const mode = this.value;
-        dateInput.value = "";
-        
-        // Morph the HTML input type depending on view
-        if (mode === "monthly" || mode === "calendar") {
-          dateInput.type = "month";
-        } else if (mode === "weekly") {
-          dateInput.type = "week";
-        } else {
-          dateInput.type = "date";
-        }
-      });
-    }
 
     function toggleSortVisibility() {
       if (playerSelectDropdown && sortControls) {

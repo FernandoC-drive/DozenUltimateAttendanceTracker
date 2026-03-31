@@ -23,7 +23,7 @@
           <circle class="wc-ring-bg"   cx="18" cy="18" r="15.9" />
           <circle class="wc-ring-fill" cx="18" cy="18" r="15.9"
                   stroke="<%= stroke_color %>"
-                  stroke-dasharray="<%= (pct * 100.0 / 100).round(1) %> <%= 100 - (pct * 100.0 / 100).round(1) %>"
+                  style="--pct: <%= pct %>;"
                   stroke-dashoffset="25" />
         </svg>
         <div class="wc-pie-center">
@@ -44,7 +44,7 @@
           </thead>
           <tbody>
             <% week[:players].each do |row| %>
-              <% completed = row[:workout]&.complete %>
+              <% completed = row[:completed_dynamically] %>
               <tr>
                 <td><%= row[:player].name %></td>
                 <td>
@@ -114,12 +114,12 @@
   fill: none;
   stroke-width: 3.5;
   stroke-linecap: round;
-  stroke-dasharray: 0 100;
-  animation: wc-fill-in 0.65s cubic-bezier(.22,.68,0,1.2) forwards;
+  animation: wc-fill-in 1s ease-out forwards;
 }
 
 @keyframes wc-fill-in {
   from { stroke-dasharray: 0 100; }
+  to { stroke-dasharray: var(--pct) 100; }
 }
 
 .wc-pie-center {

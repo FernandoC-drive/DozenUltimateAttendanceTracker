@@ -139,17 +139,42 @@ class AttendancesController < ApplicationController
   end
 
   def workout_chart_data
-    week_start = (@selected_date).beginning_of_week(:monday)
-    players    = User.where(role: :player).order(:name)
-    workouts   = WeeklyWorkout.where(week_start_date: week_start).index_by(&:player_id)
-    completed  = workouts.values.count(&:complete)
+    week_start = @selected_date.beginning_of_week(:monday)
+    week_end = week_start.end_of_week(:monday)
+    players = User.where(role: :player).order(:name)
+
+    # 1. Grab manual coach overrides
+    workouts = WeeklyWorkout.where(week_start_date: week_start).index_by(&:player_id)
+
+    # 2. Grab dynamic check-in counts in bulk (avoids N+1 database crashes!)
+    actual_workout_counts = WorkoutCheckin.where(
+         player_id: players.map(&:id),
+         workout_date: week_start..week_end
+    ).group(:player_id).count
+
+    # 3. Build the player data array with the dynamic boolean
+    players_data = players.map do |p|
+      db_record = workouts[p.id]
+      
+      # It is true if the coach checked the box, OR if they logged 2+ workouts
+      is_complete = if db_record.present?
+                      db_record.complete
+                    else
+                      (actual_workout_counts[p.id] || 0) >= 2
+                    end
+
+      { player: p, workout: db_record, completed_dynamically: is_complete }
+    end
+
+    # 4. Calculate the true total for the pie chart
+    total_completed = players_data.count { |data| data[:completed_dynamically] }
 
     [{ 
       week: week_start.strftime("%-m/%-d"),
       week_start: week_start,
-      completed: completed,
+      completed: total_completed,
       total: players.count,
-      players: players.map { |p| { player: p, workout: workouts[p.id] } }
+      players: players_data
     }]
   end
 
