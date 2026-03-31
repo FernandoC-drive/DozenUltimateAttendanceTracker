@@ -2,8 +2,8 @@ require "application_system_test_case"
 
 class AttendancesTest < ApplicationSystemTestCase
   setup do
-    @coach = User.create!(name: "Coach", email: "coach2@example.com", password: "password", role: 1, coach: true)
-    @player = User.create!(name: "Player2", email: "player2@example.com", password: "password", role: 0)
+    @coach = User.create!(name: "Coach", email: "coach2@tamu.edu", password: "password", role: 1, coach: true)
+    @player = User.create!(name: "Player2", email: "player2@tamu.edu", password: "password", role: 0)
     Attendance.create!(player: @player, date: Date.current.beginning_of_month, days_attended: 1, attended: true)
   end
 
@@ -13,10 +13,10 @@ class AttendancesTest < ApplicationSystemTestCase
     fill_in "Password", with: "password"
     click_on "Log in"
 
-    if user.role == "coach"
-      user.reload
-      assert user.coach, "coach flag should be set after login"
-    end
+    return unless user.role == "coach"
+
+    user.reload
+    assert user.coach, "coach flag should be set after login"
   end
 
   test "coach sees calendar and can toggle days" do

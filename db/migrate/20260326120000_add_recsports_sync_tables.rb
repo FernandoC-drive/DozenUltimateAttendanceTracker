@@ -31,7 +31,7 @@ class AddRecsportsSyncTables < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :recsports_event_participants, [:recsports_event_id, :user_id], unique: true, name: "index_recsports_participants_on_event_and_user"
-    add_index :recsports_event_participants, [:recsports_event_id, :recsports_uin], name: "index_recsports_participants_on_event_and_uin"
+    add_index :recsports_event_participants, %i[recsports_event_id user_id], unique: true, name: "index_recsports_participants_on_event_and_user"
+    add_index :recsports_event_participants, %i[recsports_event_id recsports_uin], name: "index_recsports_participants_on_event_and_uin"
   end
 end

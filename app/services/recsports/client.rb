@@ -1,7 +1,6 @@
 require "json"
 require "net/http"
 require "nokogiri"
-require "set"
 require "uri"
 
 module Recsports
@@ -83,17 +82,17 @@ module Recsports
       created_by_name, created_by_email = parse_created_by(created_by_value)
 
       {
-        "title" => labeled_value(page_text, "Event Name", "Event Type", "Event Venue", "Event Date/Time").presence || doc.at_css("h1, h2, h3")&.text.to_s.squish,
-        "event_type" => labeled_value(page_text, "Event Type", "Event Venue", "Event Date/Time", "Created By"),
-        "venue" => labeled_value(page_text, "Event Venue", "Event Date/Time", "Created By", "Created At"),
-        "starts_at" => starts_at,
-        "ends_at" => ends_at,
-        "source_url" => source_url,
-        "external_id" => extract_external_id(source_url),
-        "created_by_name" => created_by_name,
-        "created_by_email" => created_by_email,
-        "source_created_at" => parse_time(labeled_value(page_text, "Created At", "Participants")),
-        "participants" => parse_participants(table)
+           "title" => labeled_value(page_text, "Event Name", "Event Type", "Event Venue", "Event Date/Time").presence || doc.at_css("h1, h2, h3")&.text.to_s.squish,
+           "event_type" => labeled_value(page_text, "Event Type", "Event Venue", "Event Date/Time", "Created By"),
+           "venue" => labeled_value(page_text, "Event Venue", "Event Date/Time", "Created By", "Created At"),
+           "starts_at" => starts_at,
+           "ends_at" => ends_at,
+           "source_url" => source_url,
+           "external_id" => extract_external_id(source_url),
+           "created_by_name" => created_by_name,
+           "created_by_email" => created_by_email,
+           "source_created_at" => parse_time(labeled_value(page_text, "Created At", "Participants")),
+           "participants" => parse_participants(table)
       }
     end
 
@@ -113,10 +112,10 @@ module Recsports
         next if [first_name, last_name, uin].all?(&:blank?)
 
         {
-          "first_name" => first_name,
-          "last_name" => last_name,
-          "uin" => uin,
-          "position" => position
+             "first_name" => first_name,
+             "last_name" => last_name,
+             "uin" => uin,
+             "position" => position
         }
       end
     end
@@ -143,15 +142,15 @@ module Recsports
       return if form.nil?
 
       {
-        action: absolute_url(form["action"], base_url) || base_url,
-        method: form["method"].to_s.downcase.presence || "post",
-        fields: form.css("input, textarea, select").map do |field|
+           action: absolute_url(form["action"], base_url) || base_url,
+           method: form["method"].to_s.downcase.presence || "post",
+           fields: form.css("input, textarea, select").map do |field|
           {
-            name: field["name"],
-            value: field["value"],
-            type: field.name == "select" ? "select" : field["type"].to_s.downcase
+               name: field["name"],
+               value: field["value"],
+               type: field.name == "select" ? "select" : field["type"].to_s.downcase
           }
-        end
+           end
       }
     end
 

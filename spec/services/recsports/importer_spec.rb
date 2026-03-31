@@ -4,27 +4,27 @@ RSpec.describe Recsports::Importer do
   describe "#call" do
     it "creates events, participants, players, and aggregated attendance" do
       snapshot = {
-        "events" => [
-          {
-            "title" => "Monday Practice",
-            "starts_at" => "2025-08-25 20:00",
-            "ends_at" => "2025-08-25 22:00",
-            "source_url" => "https://sportclubs.example.com/events/123",
-            "participants" => [
-              { "first_name" => "Aldrich", "last_name" => "Leow", "uin" => "732005379", "position" => 0 },
-              { "first_name" => "Alexander", "last_name" => "Vo", "uin" => "535009099", "position" => 1 }
-            ]
-          },
-          {
-            "title" => "Film Session",
-            "starts_at" => "2025-08-25 18:00",
-            "ends_at" => "2025-08-25 19:00",
-            "source_url" => "https://sportclubs.example.com/events/456",
-            "participants" => [
-              { "first_name" => "Aldrich", "last_name" => "Leow", "uin" => "732005379", "position" => 0 }
-            ]
-          }
-        ]
+           "events" => [
+                {
+                     "title" => "Monday Practice",
+                     "starts_at" => "2025-08-25 20:00",
+                     "ends_at" => "2025-08-25 22:00",
+                     "source_url" => "https://sportclubs.example.com/events/123",
+                     "participants" => [
+                          { "first_name" => "Aldrich", "last_name" => "Leow", "uin" => "732005379", "position" => 0 },
+                          { "first_name" => "Alexander", "last_name" => "Vo", "uin" => "535009099", "position" => 1 }
+                     ]
+                },
+                {
+                     "title" => "Film Session",
+                     "starts_at" => "2025-08-25 18:00",
+                     "ends_at" => "2025-08-25 19:00",
+                     "source_url" => "https://sportclubs.example.com/events/456",
+                     "participants" => [
+                          { "first_name" => "Aldrich", "last_name" => "Leow", "uin" => "732005379", "position" => 0 }
+                     ]
+                }
+           ]
       }
 
       described_class.new(snapshot: snapshot).call
@@ -45,17 +45,17 @@ RSpec.describe Recsports::Importer do
 
     it "parses US-style recsports dates without swapping month and day" do
       snapshot = {
-        "events" => [
-          {
-            "title" => "Thursday Practice",
-            "starts_at" => "03/26/2026 8:00 PM",
-            "ends_at" => "03/26/2026 10:00 PM",
-            "source_url" => "https://sportclubs.example.com/events/789",
-            "participants" => [
-              { "first_name" => "Tony", "last_name" => "Cao", "uin" => "732004536", "position" => 0 }
-            ]
-          }
-        ]
+           "events" => [
+                {
+                     "title" => "Thursday Practice",
+                     "starts_at" => "03/26/2026 8:00 PM",
+                     "ends_at" => "03/26/2026 10:00 PM",
+                     "source_url" => "https://sportclubs.example.com/events/789",
+                     "participants" => [
+                          { "first_name" => "Tony", "last_name" => "Cao", "uin" => "732004536", "position" => 0 }
+                     ]
+                }
+           ]
       }
 
       described_class.new(snapshot: snapshot).call
@@ -70,48 +70,48 @@ RSpec.describe Recsports::Importer do
 
     it "removes stale recsports attendance when a re-sync corrects an event date" do
       user = User.create!(
-        email: "tony@example.com",
-        name: "Tony Cao",
-        password: "password",
-        role: :player,
-        recsports_uin: "732004536"
+           email: "tony@tamu.edu",
+           name: "Tony Cao",
+           password: "password",
+           role: :player,
+           recsports_uin: "732004536"
       )
 
       event = RecsportsEvent.create!(
-        title: "Thursday Practice",
-        starts_at: Time.zone.parse("2026-04-03 20:00"),
-        ends_at: Time.zone.parse("2026-04-03 22:00"),
-        source_url: "https://sportclubs.example.com/events/789",
-        synced_at: Time.current
+           title: "Thursday Practice",
+           starts_at: Time.zone.parse("2026-04-03 20:00"),
+           ends_at: Time.zone.parse("2026-04-03 22:00"),
+           source_url: "https://sportclubs.example.com/events/789",
+           synced_at: Time.current
       )
       event.participants.create!(
-        user: user,
-        first_name: "Tony",
-        last_name: "Cao",
-        recsports_uin: "732004536",
-        position: 0
+           user: user,
+           first_name: "Tony",
+           last_name: "Cao",
+           recsports_uin: "732004536",
+           position: 0
       )
       Attendance.create!(
-        player: user,
-        date: Date.new(2026, 4, 3),
-        days_attended: 1,
-        attended: true,
-        source: :recsports,
-        notes: "Imported from RecSports events: Thursday Practice"
+           player: user,
+           date: Date.new(2026, 4, 3),
+           days_attended: 1,
+           attended: true,
+           source: :recsports,
+           notes: "Imported from RecSports events: Thursday Practice"
       )
 
       snapshot = {
-        "events" => [
-          {
-            "title" => "Thursday Practice",
-            "starts_at" => "03/26/2026 8:00 PM",
-            "ends_at" => "03/26/2026 10:00 PM",
-            "source_url" => "https://sportclubs.example.com/events/789",
-            "participants" => [
-              { "first_name" => "Tony", "last_name" => "Cao", "uin" => "732004536", "position" => 0 }
-            ]
-          }
-        ]
+           "events" => [
+                {
+                     "title" => "Thursday Practice",
+                     "starts_at" => "03/26/2026 8:00 PM",
+                     "ends_at" => "03/26/2026 10:00 PM",
+                     "source_url" => "https://sportclubs.example.com/events/789",
+                     "participants" => [
+                          { "first_name" => "Tony", "last_name" => "Cao", "uin" => "732004536", "position" => 0 }
+                     ]
+                }
+           ]
       }
 
       described_class.new(snapshot: snapshot).call

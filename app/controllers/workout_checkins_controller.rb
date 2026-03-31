@@ -26,7 +26,7 @@ class WorkoutCheckinsController < ApplicationController
 
   def destroy
     @checkin = WorkoutCheckin.find(params[:id])
-    
+
     # Security check: only the player or a coach can delete this
     if current_user == @checkin.player || current_user.coach?
       @checkin.destroy

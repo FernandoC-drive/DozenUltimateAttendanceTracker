@@ -66,7 +66,7 @@ class AttendanceRecordsController < ApplicationController
       message = "Only coaches can edit attendance."
     end
 
-    redirect_back(fallback_location: attendance_records_path, notice: message)
+    redirect_back_or_to(attendance_records_path, notice: message)
   end
 
   private

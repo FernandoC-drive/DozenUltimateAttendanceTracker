@@ -36,7 +36,7 @@ RSpec.describe Users::OmniauthCallbacksController, type: :controller do
       }.not_to change(User, :count)
 
       expect(response).to redirect_to(new_session_path)
-      expect(flash[:alert]).to eq("Authentication failed.")
+      expect(flash[:alert]).to eq("Authentication failed. You must use a @tamu.edu email address to log in.")
     end
   end
 

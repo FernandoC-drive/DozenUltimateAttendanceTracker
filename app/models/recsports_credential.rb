@@ -6,7 +6,7 @@ class RecsportsCredential < ApplicationRecord
   validates :form_url, presence: true, if: -> { shared_credentials? || browser_assisted? }
   validates :browser_sync_token, presence: true, uniqueness: true
 
-  private
+     private
 
   def ensure_browser_sync_token
     self.browser_sync_token ||= SecureRandom.hex(24)

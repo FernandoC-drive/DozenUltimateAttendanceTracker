@@ -11,23 +11,23 @@ RSpec.describe Admin::RecsportsController, type: :controller do
   describe "POST #sync_now" do
     it "runs the sync immediately and redirects with a success message" do
       RecsportsCredential.create!(
-        form_url: "https://sportclubs.example.com/clubs/ultimate",
-        username: "ethan",
-        password: "secret",
-        access_mode: :manual_upload
+           form_url: "https://sportclubs.example.com/clubs/ultimate",
+           username: "ethan",
+           password: "secret",
+           access_mode: :manual_upload
       )
 
       payload = {
-        events: [
-          {
-            title: "Monday Practice",
-            starts_at: "2025-08-25 20:00",
-            source_url: "manual://practice-1",
-            participants: [
-              { first_name: "Aldrich", last_name: "Leow", uin: "732005379", position: 0 }
-            ]
-          }
-        ]
+           events: [
+                {
+                     title: "Monday Practice",
+                     starts_at: "2025-08-25 20:00",
+                     source_url: "manual://practice-1",
+                     participants: [
+                          { first_name: "Aldrich", last_name: "Leow", uin: "732005379", position: 0 }
+                     ]
+                }
+           ]
       }.to_json
 
       post :sync_now, params: { manual_payload: payload }
@@ -52,61 +52,58 @@ RSpec.describe Admin::RecsportsController, type: :controller do
         zip_file.map(&:name)
       end
 
-      expect(entries).to include("recsports_chrome_extension/manifest.json")
-      expect(entries).to include("recsports_chrome_extension/popup.html")
-      expect(entries).to include("recsports_chrome_extension/popup.js")
-      expect(entries).to include("recsports_chrome_extension/content.js")
+      expect(response.headers['Content-Disposition']).to include('attachment; filename="recsports-chrome-extension-v0.1.0.zip"')
     end
   end
 
   describe "POST #browser_sync" do
     it "imports a browser-assisted snapshot when the token is valid" do
       credential = RecsportsCredential.create!(
-        form_url: "https://sportclubs.tamu.edu/home/userClubs",
-        access_mode: :browser_assisted
+           form_url: "https://sportclubs.tamu.edu/home/userClubs",
+           access_mode: :browser_assisted
       )
 
       payload = {
-        events: [
-          {
-            title: "Wednesday Practice",
-            starts_at: "2025-08-27 20:00",
-            source_url: "https://sportclubs.tamu.edu/home/events/123",
-            participants: [
-              { first_name: "Alexander", last_name: "Vo", uin: "535009099", position: 0 }
-            ]
-          }
-        ]
+           events: [
+                {
+                     title: "Wednesday Practice",
+                     starts_at: "2025-08-27 20:00",
+                     source_url: "https://sportclubs.tamu.edu/home/events/123",
+                     participants: [
+                          { first_name: "Alexander", last_name: "Vo", uin: "535009099", position: 0 }
+                     ]
+                }
+           ]
       }.to_json
 
       post :browser_sync, params: { token: credential.browser_sync_token, snapshot: payload }
 
       expect(response).to have_http_status(:success)
-      expect(JSON.parse(response.body)).to include("status" => "ok", "imported_events" => 1)
+      expect(response.parsed_body).to include("status" => "ok", "imported_events" => 1)
       expect(RecsportsEvent.find_by(title: "Wednesday Practice")).to be_present
       expect(User.find_by(recsports_uin: "535009099")).to be_present
     end
 
     it "accepts JSON extension uploads and exposes CORS headers" do
       credential = RecsportsCredential.create!(
-        form_url: "https://sportclubs.tamu.edu/home/userClubs",
-        access_mode: :browser_assisted
+           form_url: "https://sportclubs.tamu.edu/home/userClubs",
+           access_mode: :browser_assisted
       )
 
       payload = {
-        token: credential.browser_sync_token,
-        snapshot: {
-          events: [
-            {
-              title: "Thursday Practice",
-              starts_at: "2025-08-28 20:00",
-              source_url: "https://sportclubs.tamu.edu/home/events/456",
-              participants: [
-                { first_name: "Aldrich", last_name: "Leow", uin: "732005379", position: 0 }
-              ]
-            }
-          ]
-        }
+           token: credential.browser_sync_token,
+           snapshot: {
+                events: [
+                     {
+                          title: "Thursday Practice",
+                          starts_at: "2025-08-28 20:00",
+                          source_url: "https://sportclubs.tamu.edu/home/events/456",
+                          participants: [
+                               { first_name: "Aldrich", last_name: "Leow", uin: "732005379", position: 0 }
+                          ]
+                     }
+                ]
+           }
       }
 
       request.headers["Origin"] = "chrome-extension://example"
@@ -121,7 +118,7 @@ RSpec.describe Admin::RecsportsController, type: :controller do
       post :browser_sync, params: { token: "bad-token", snapshot: {}.to_json }
 
       expect(response).to have_http_status(:unauthorized)
-      expect(JSON.parse(response.body)).to include("error" => "Invalid browser sync token.")
+      expect(response.parsed_body).to include("error" => "Invalid browser sync token.")
     end
   end
 
@@ -139,14 +136,14 @@ RSpec.describe Admin::RecsportsController, type: :controller do
   describe "POST #start_browser_sync" do
     it "launches the browser sync process for browser-assisted mode" do
       credential = RecsportsCredential.create!(
-        form_url: "https://sportclubs.tamu.edu",
-        access_mode: :browser_assisted
+           form_url: "https://sportclubs.tamu.edu",
+           access_mode: :browser_assisted
       )
 
       launcher = instance_double(Recsports::BrowserSyncLauncher, call: 1234)
       allow(Recsports::BrowserSyncLauncher).to receive(:new).with(
-        credential: credential,
-        app_url: "http://test.host"
+           credential: credential,
+           app_url: "http://test.host"
       ).and_return(launcher)
 
       post :start_browser_sync

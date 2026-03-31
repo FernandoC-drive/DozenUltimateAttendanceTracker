@@ -28,11 +28,11 @@ module Recsports
             user = resolve_user(participant_payload)
 
             event.participants.create!(
-              user: user,
-              first_name: participant_payload["first_name"].to_s.strip,
-              last_name: participant_payload["last_name"].to_s.strip,
-              recsports_uin: participant_payload["uin"].to_s.strip.presence,
-              position: participant_payload["position"].to_i
+                 user: user,
+                 first_name: participant_payload["first_name"].to_s.strip,
+                 last_name: participant_payload["last_name"].to_s.strip,
+                 recsports_uin: participant_payload["uin"].to_s.strip.presence,
+                 position: participant_payload["position"].to_i
             )
           end
         end
@@ -56,18 +56,18 @@ module Recsports
         next if date.nil?
 
         {
-          "title" => title,
-          "starts_at" => date.in_time_zone,
-          "ends_at" => date.in_time_zone,
-          "source_url" => "manual://#{date}-#{title.parameterize}",
-          "participants" => rows.map.with_index do |row, index|
+             "title" => title,
+             "starts_at" => date.in_time_zone,
+             "ends_at" => date.in_time_zone,
+             "source_url" => "manual://#{date}-#{title.parameterize}",
+             "participants" => rows.map.with_index do |row, index|
             {
-              "first_name" => row["first_name"] || row[:first_name] || row["name"] || row[:name],
-              "last_name" => row["last_name"] || row[:last_name],
-              "uin" => row["uin"] || row[:uin],
-              "position" => index
+                 "first_name" => row["first_name"] || row[:first_name] || row["name"] || row[:name],
+                 "last_name" => row["last_name"] || row[:last_name],
+                 "uin" => row["uin"] || row[:uin],
+                 "position" => index
             }
-          end
+             end
         }
       end.compact
     end
@@ -81,43 +81,43 @@ module Recsports
         next if first_name.blank? && last_name.blank?
 
         {
-          "first_name" => first_name,
-          "last_name" => last_name,
-          "uin" => normalized["uin"].to_s.strip.presence,
-          "position" => normalized["position"].to_i
+             "first_name" => first_name,
+             "last_name" => last_name,
+             "uin" => normalized["uin"].to_s.strip.presence,
+             "position" => normalized["position"].to_i
         }
       end
 
       return if participants.empty?
 
       {
-        "title" => payload["title"].presence || "Imported Event",
-        "event_type" => payload["event_type"].presence,
-        "venue" => payload["venue"].presence,
-        "starts_at" => parse_time(payload["starts_at"]),
-        "ends_at" => parse_time(payload["ends_at"]),
-        "source_url" => payload["source_url"].presence || "manual://#{SecureRandom.hex(8)}",
-        "external_id" => payload["external_id"].presence,
-        "created_by_name" => payload["created_by_name"].presence,
-        "created_by_email" => payload["created_by_email"].presence,
-        "source_created_at" => parse_time(payload["source_created_at"]),
-        "participants" => deduplicated_participants(participants)
+           "title" => payload["title"].presence || "Imported Event",
+           "event_type" => payload["event_type"].presence,
+           "venue" => payload["venue"].presence,
+           "starts_at" => parse_time(payload["starts_at"]),
+           "ends_at" => parse_time(payload["ends_at"]),
+           "source_url" => payload["source_url"].presence || "manual://#{SecureRandom.hex(8)}",
+           "external_id" => payload["external_id"].presence,
+           "created_by_name" => payload["created_by_name"].presence,
+           "created_by_email" => payload["created_by_email"].presence,
+           "source_created_at" => parse_time(payload["source_created_at"]),
+           "participants" => deduplicated_participants(participants)
       }
     end
 
     def upsert_event(payload, synced_at)
       event = RecsportsEvent.find_or_initialize_by(source_url: payload["source_url"])
       event.assign_attributes(
-        title: payload["title"],
-        event_type: payload["event_type"],
-        venue: payload["venue"],
-        starts_at: payload["starts_at"],
-        ends_at: payload["ends_at"],
-        external_id: payload["external_id"],
-        created_by_name: payload["created_by_name"],
-        created_by_email: payload["created_by_email"],
-        source_created_at: payload["source_created_at"],
-        synced_at: synced_at
+           title: payload["title"],
+           event_type: payload["event_type"],
+           venue: payload["venue"],
+           starts_at: payload["starts_at"],
+           ends_at: payload["ends_at"],
+           external_id: payload["external_id"],
+           created_by_name: payload["created_by_name"],
+           created_by_email: payload["created_by_email"],
+           source_created_at: payload["source_created_at"],
+           synced_at: synced_at
       )
       event.save!
       event
@@ -125,11 +125,9 @@ module Recsports
 
     def resolve_user(payload)
       uin = payload["uin"].to_s.strip.presence
-      full_name = [payload["first_name"], payload["last_name"]].map { |value| value.to_s.strip }.reject(&:blank?).join(" ").strip
+      full_name = [payload["first_name"], payload["last_name"]].map { |value| value.to_s.strip }.compact_blank.join(" ").strip
 
-      user = if uin.present?
-        User.find_by(recsports_uin: uin)
-      end
+      user = (User.find_by(recsports_uin: uin) if uin.present?)
 
       user ||= User.find_by(name: full_name) if full_name.present?
       user ||= User.new(email: generated_email(uin, full_name))
@@ -164,13 +162,13 @@ module Recsports
         next if date.blank?
 
         Attendance.create!(
-          player: rows.first[:user],
-          date: date,
-          days_attended: rows.size,
-          attended: true,
-          source: :recsports,
-          external_id: rows.map { |row| row[:title] }.join("|"),
-          notes: "Imported from RecSports events: #{rows.map { |row| row[:title] }.uniq.join(', ')}"
+             player: rows.first[:user],
+             date: date,
+             days_attended: rows.size,
+             attended: true,
+             source: :recsports,
+             external_id: rows.map { |row| row[:title] }.join("|"),
+             notes: "Imported from RecSports events: #{rows.map { |row| row[:title] }.uniq.join(', ')}"
         )
       end
     end
@@ -181,9 +179,9 @@ module Recsports
           next if event.event_date.blank?
 
           {
-            user: participant.user,
-            date: event.event_date,
-            title: event.title
+               user: participant.user,
+               date: event.event_date,
+               title: event.title
           }
         end
       end.compact
@@ -194,9 +192,9 @@ module Recsports
       end_time = affected_dates.max.end_of_day
 
       RecsportsEvent
-        .includes(participants: :user)
-        .where(starts_at: start_time..end_time)
-        .select { |event| affected_dates.include?(event.event_date) }
+           .includes(participants: :user)
+           .where(starts_at: start_time..end_time)
+           .select { |event| affected_dates.include?(event.event_date) }
     end
 
     def deduplicated_participants(participants)
@@ -254,10 +252,10 @@ module Recsports
 
     def parse_us_datetime(value)
       [
-        "%m/%d/%Y %l:%M %p",
-        "%m/%d/%Y %I:%M %p",
-        "%m/%d/%Y %H:%M",
-        "%m/%d/%Y"
+           "%m/%d/%Y %l:%M %p",
+           "%m/%d/%Y %I:%M %p",
+           "%m/%d/%Y %H:%M",
+           "%m/%d/%Y"
       ].each do |format|
         parsed = Time.zone.strptime(value, format)
         return parsed if parsed
