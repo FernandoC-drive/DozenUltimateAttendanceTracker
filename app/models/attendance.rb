@@ -27,10 +27,10 @@ class Attendance < ApplicationRecord
 
     # Ask the database which days are active
     practice_days = TeamSetting.current.practice_days_ints
-    
+
     # Filter the month down to only those specific days
     possible_dates = (month_start..month_end).select { |d| practice_days.include?(d.wday) }
-    
+
     return 0.0 if possible_dates.empty?
 
     # Count how many of those specific dates the player attended
@@ -42,6 +42,6 @@ class Attendance < ApplicationRecord
 
   def heat_level
     # since each attendance record represents a single day, heat is either 0 or 1
-    days_attended.to_i > 0 ? 1 : 0
+    days_attended.to_i.positive? ? 1 : 0
   end
 end

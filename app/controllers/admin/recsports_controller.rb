@@ -91,12 +91,12 @@ module Admin
       credential.update!(last_checked_at: Time.current, last_error: nil, active: true)
 
       render json: {
-        status: "ok",
-        imported_events: Array(snapshot["events"]).size
+           status: "ok",
+           imported_events: Array(snapshot["events"]).size
       }
     rescue StandardError => e
       credential&.update(last_error: e.message, active: false)
-      render json: { error: e.message }, status: :unprocessable_entity
+      render json: { error: e.message }, status: :unprocessable_content
     end
 
     def start_browser_sync
@@ -112,11 +112,12 @@ module Admin
       end
 
       Recsports::BrowserSyncLauncher.new(
-        credential: credential,
-        app_url: request.base_url
+           credential: credential,
+           app_url: request.base_url
       ).call
 
-      redirect_to admin_recsports_path, notice: "Browser sync launched. A Chrome window should open on this machine. Complete Microsoft and Duo there, then return to the sync terminal window if prompted."
+      redirect_to admin_recsports_path,
+                  notice: "Browser sync launched. A Chrome window should open on this machine. Complete Microsoft and Duo there, then return to the sync terminal window if prompted."
     rescue StandardError => e
       redirect_to admin_recsports_path, alert: e.message
     end

@@ -25,7 +25,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :workout_checkins, only: [:create, :destroy]
+  resources :workout_checkins, only: %i[create destroy]
 
   resources :attendance_records do
     member do
@@ -33,10 +33,9 @@ Rails.application.routes.draw do
     end
   end
 
-
   resources :attendances do
     collection do
-      patch :toggle   # supports toggling by date/player in calendar
+      patch :toggle # supports toggling by date/player in calendar
       post :toggle_workout_complete # for coach to check/uncheck workout completion
     end
     member do

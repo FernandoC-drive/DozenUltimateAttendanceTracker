@@ -4,7 +4,7 @@ class AttendanceRecordsTest < ApplicationSystemTestCase
   setup do
     @attendance_record = attendance_records(:one)
     # create coach user for toggling actions
-    @coach = User.create!(name: "Coach", email: "coach_records@example.com", password: "password", role: 1, coach: true)
+    @coach = User.create!(name: "Coach", email: "coach_records@tamu.edu", password: "password", role: 1, coach: true)
   end
 
   def sign_in(user)
@@ -14,10 +14,10 @@ class AttendanceRecordsTest < ApplicationSystemTestCase
     click_on "Log in"
 
     # ensure the coach flag was set for coach-role accounts
-    if user.role == "coach"
-      user.reload
-      assert user.coach, "expected coach flag to be true after login"
-    end
+    return unless user.role == "coach"
+
+    user.reload
+    assert user.coach, "expected coach flag to be true after login"
   end
 
   test "visiting the index" do

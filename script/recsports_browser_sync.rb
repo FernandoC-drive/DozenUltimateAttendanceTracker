@@ -34,7 +34,7 @@ class BrowserSync
     driver&.quit
   end
 
-  private
+     private
 
   def build_driver
     options = Selenium::WebDriver::Chrome::Options.new
@@ -77,17 +77,17 @@ class BrowserSync
     created_by_name, created_by_email = parse_created_by(created_by_value)
 
     {
-      "title" => labeled_value(page_text, "Event Name", "Event Type", "Event Venue", "Event Date/Time") || doc.at_css("h1, h2, h3")&.text.to_s.strip,
-      "event_type" => labeled_value(page_text, "Event Type", "Event Venue", "Event Date/Time", "Created By"),
-      "venue" => labeled_value(page_text, "Event Venue", "Event Date/Time", "Created By", "Created At"),
-      "starts_at" => starts_at,
-      "ends_at" => ends_at,
-      "source_url" => source_url,
-      "external_id" => extract_external_id(source_url),
-      "created_by_name" => created_by_name,
-      "created_by_email" => created_by_email,
-      "source_created_at" => parse_time(labeled_value(page_text, "Created At", "Participants")),
-      "participants" => parse_participants(table)
+         "title" => labeled_value(page_text, "Event Name", "Event Type", "Event Venue", "Event Date/Time") || doc.at_css("h1, h2, h3")&.text.to_s.strip,
+         "event_type" => labeled_value(page_text, "Event Type", "Event Venue", "Event Date/Time", "Created By"),
+         "venue" => labeled_value(page_text, "Event Venue", "Event Date/Time", "Created By", "Created At"),
+         "starts_at" => starts_at,
+         "ends_at" => ends_at,
+         "source_url" => source_url,
+         "external_id" => extract_external_id(source_url),
+         "created_by_name" => created_by_name,
+         "created_by_email" => created_by_email,
+         "source_created_at" => parse_time(labeled_value(page_text, "Created At", "Participants")),
+         "participants" => parse_participants(table)
     }
   end
 
@@ -111,13 +111,13 @@ class BrowserSync
       first_name = pick_cell(cells, first_name_index, 0)
       last_name = pick_cell(cells, last_name_index, 1)
       uin = pick_cell(cells, uin_index, 2)
-      next if [first_name, last_name, uin].all? { |value| value.nil? || value.empty? }
+      next if [first_name, last_name, uin].all?(&:blank?)
 
       {
-        "first_name" => first_name,
-        "last_name" => last_name,
-        "uin" => uin,
-        "position" => position
+           "first_name" => first_name,
+           "last_name" => last_name,
+           "uin" => uin,
+           "position" => position
       }
     end
   end
@@ -135,14 +135,14 @@ class BrowserSync
   end
 
   def parse_datetime_range(value)
-    return [nil, nil] if value.nil? || value.empty?
+    return [nil, nil] if value.blank?
 
     start_text, end_text = value.split(/\s+to\s+/i, 2)
     [parse_time(start_text), parse_time(end_text)]
   end
 
   def parse_created_by(value)
-    return [nil, nil] if value.nil? || value.empty?
+    return [nil, nil] if value.blank?
 
     email = value[/\(([^)]+)\)/, 1]
     name = value.sub(/\s*\([^)]+\)\s*/, "").strip
@@ -150,7 +150,7 @@ class BrowserSync
   end
 
   def parse_time(value)
-    return nil if value.nil? || value.empty?
+    return nil if value.blank?
 
     Time.parse(value).iso8601
   rescue ArgumentError
@@ -166,7 +166,7 @@ class BrowserSync
   end
 
   def absolute_url(raw_url, base_url)
-    return nil if raw_url.nil? || raw_url.empty?
+    return nil if raw_url.blank?
 
     URI.join(base_url, raw_url).to_s
   rescue URI::InvalidURIError
@@ -182,8 +182,8 @@ class BrowserSync
     uri = URI.parse("#{@app_url}/admin/recsports/browser_sync")
     request = Net::HTTP::Post.new(uri)
     request.set_form_data(
-      "token" => @token,
-      "snapshot" => JSON.generate(snapshot)
+         "token" => @token,
+         "snapshot" => JSON.generate(snapshot)
     )
 
     response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|

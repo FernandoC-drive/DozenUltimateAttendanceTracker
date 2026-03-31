@@ -31,7 +31,8 @@ module Admin
 
     def update_settings
       setting = TeamSetting.current
-      setting.update(practice_days: params[:practice_days] || [])
+      safe_days = Array(params[:practice_days]).reject(&:blank?)
+      setting.update(practice_days: safe_days)
       
       redirect_back fallback_location: admin_attendances_path, notice: "Practice days updated successfully!"
     end
@@ -52,6 +53,4 @@ module Admin
       Date.current
     end
   end
-
-  
 end

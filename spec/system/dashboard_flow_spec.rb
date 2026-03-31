@@ -25,8 +25,7 @@ RSpec.describe "DashboardFlow", type: :system do
     expect(page).to have_content("Successfully authenticated from Google account.")
     
     # 4. Interact with the filters
-    select "Weekly", from: "view"
-    click_button "Apply"
+    choose "view_weekly"
     expect(page).to have_content("Attendance")
 
     # 5. Sign out

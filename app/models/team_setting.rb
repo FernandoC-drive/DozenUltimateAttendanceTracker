@@ -6,6 +6,6 @@ class TeamSetting < ApplicationRecord
   end
 
   def practice_days_ints
-    Array(practice_days).reject(&:blank?).map(&:to_i)
+    Array(practice_days).compact_blank.map(&:to_i)
   end
 end

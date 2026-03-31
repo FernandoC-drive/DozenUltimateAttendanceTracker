@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe AttendancesController, type: :controller do
+  include ActiveSupport::Testing::TimeHelpers
   let(:player) { User.create!(email: 'player@tamu.edu', name: 'Player', password: 'password', role: :player) }
   let(:coach) { User.create!(email: 'coach@tamu.edu', name: 'Coach', password: 'password', role: :coach) }
 
@@ -22,10 +23,10 @@ RSpec.describe AttendancesController, type: :controller do
 
       it "loads the calendar view and standard colors by default" do
         RecsportsEvent.create!(
-          title: "Monday Practice",
-          source_url: "manual://practice-1",
-          starts_at: Time.zone.parse("2025-08-25 20:00"),
-          synced_at: Time.current
+             title: "Monday Practice",
+             source_url: "manual://practice-1",
+             starts_at: Time.zone.parse("2025-08-25 20:00"),
+             synced_at: Time.current
         )
 
         get :index
@@ -67,12 +68,10 @@ RSpec.describe AttendancesController, type: :controller do
       end
 
       it "allows viewing other players when no filter is applied" do
-        other = User.create!(email: 'other@tamu.edu', name: 'Other', password: 'password', role: :player)
-        Attendance.create!(player: other, date: Date.current, days_attended: 1)
-        Attendance.create!(player: player, date: Date.current, days_attended: 1)
+        other_player = User.create!(name: "Other", email: "other@tamu.edu", password: "password", role: :player)
         get :index
-        names = assigns(:attendances).map { |a| a.player.name }
-        expect(names).to include('Other', player.name)
+        names = assigns(:players).map(&:name)
+        expect(names).to include(player.name, other_player.name)
       end
 
       it "can filter to a specific player and still calculate percent" do
@@ -84,15 +83,13 @@ RSpec.describe AttendancesController, type: :controller do
 
       it "loads the player's workout check-ins for the specified month" do
         WorkoutCheckin.create!(player: player, workout_date: Date.new(2026, 2, 15))
-        
         get :index, params: { workout_month: "2026-02-01" }
-        
         expect(assigns(:workout_month)).to eq(Date.new(2026, 2, 1))
         expect(assigns(:workout_checkins).count).to eq(1)
       end
 
       it "loads the current user's workouts if no specific player is selected (Line 65)" do
-        WorkoutCheckin.create!(player: player, workout_date: Date.today)
+        WorkoutCheckin.create!(player: player, workout_date: Time.zone.today)
         get :index
         expect(assigns(:workout_checkins)).not_to be_empty
       end
@@ -119,15 +116,20 @@ RSpec.describe AttendancesController, type: :controller do
 
       it "can filter by player_id and set percent and calendar data" do
         p = User.create!(email: 'p3@tamu.edu', name: 'P3', password: 'password', role: :player)
-        Attendance.create!(player: p, date: Date.current, attended: true, days_attended: 1)
-        get :index, params: { player_id: p.id, view: 'calendar' }
-        expect(assigns(:selected_player)).to eq(p)
-        expect(assigns(:percent_attended)).to eq( (1.0 / Date.current.end_of_month.day * 100).round(1) )
-        expect(assigns(:calendar_attendances)).to be_a(Hash)
+        TeamSetting.current.update!(practice_days: [1, 3, 5])
+        
+        # Freeze time so the math is exactly 1/13 (7.7%)
+        travel_to Date.new(2026, 3, 2) do
+          Attendance.create!(player: p, date: Date.current, attended: true, days_attended: 1)
+          get :index, params: { player_id: p.id, view: 'calendar' }
+          expect(assigns(:selected_player)).to eq(p)
+          expect(assigns(:percent_attended)).to eq(7.7) 
+          expect(assigns(:calendar_attendances)).to be_a(Hash)
+        end
       end
 
       it "does not auto-select a player for coaches (defaults to Team View)" do
-        p1 = User.create!(email: 'first@tamu.edu', name: 'AAA', password: 'password', role: :player)
+        User.create!(email: 'first@tamu.edu', name: 'AAA', password: 'password', role: :player)
         get :index, params: { view: 'calendar' }
         expect(assigns(:selected_player)).to be_nil
       end
@@ -139,12 +141,26 @@ RSpec.describe AttendancesController, type: :controller do
 
       it "respects the database record for weekly workout completion (Line 174)" do
         target_week = Date.current.beginning_of_week(:monday)
-        
         WeeklyWorkout.create!(player: player, week_start_date: target_week, complete: true)
-
         get :index, params: { view: 'weekly', date: Date.current.to_s }
-        
         expect(response).to have_http_status(:success)
+      end
+
+      describe "team summary sorting" do
+        it "sorts by percent_asc" do
+          get :index, params: { sort: 'percent_asc' }
+          expect(response).to have_http_status(:success)
+        end
+
+        it "sorts by percent_desc" do
+          get :index, params: { sort: 'percent_desc' }
+          expect(response).to have_http_status(:success)
+        end
+        
+        it "sorts by name_desc" do
+          get :index, params: { sort: 'name_desc' }
+          expect(response).to have_http_status(:success)
+        end
       end
 
       describe "PATCH #toggle" do
@@ -156,17 +172,16 @@ RSpec.describe AttendancesController, type: :controller do
 
         it "creates a new attendance when toggled by date/player" do
           patch :toggle, params: { date: Date.current, player_id: player.id }
-          expect(Attendance.where(player: player, date: Date.current).exists?).to be(true)
+          expect(Attendance.exists?(player: player, date: Date.current)).to be(true)
         end
       end
 
       describe "POST #toggle_workout_complete" do
         it "allows a coach to manually toggle a weekly workout complete status" do
           week_start = Date.current.beginning_of_week(:monday)
-          
-          expect {
+          expect do
             post :toggle_workout_complete, params: { player_id: player.id, week_start: week_start.to_s }
-          }.to change(WeeklyWorkout, :count).by(1)
+          end.to change(WeeklyWorkout, :count).by(1)
 
           tracker = WeeklyWorkout.last
           expect(tracker.complete).to be true

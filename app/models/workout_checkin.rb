@@ -6,15 +6,14 @@ class WorkoutCheckin < ApplicationRecord
   validates :workout_date, uniqueness: { scope: :player_id, message: "has already been logged" }
   validates :proof_url, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]) }, allow_blank: true
 
-  validates :proof_image, 
-            content_type: ['image/png', 'image/jpeg'], 
+  validates :proof_image,
+            content_type: ['image/png', 'image/jpeg'],
             size: { less_than: 5.megabytes, message: 'is too large (max 5MB)' }
 
   after_create_commit :sync_weekly_completion_status
   after_destroy_commit :sync_weekly_completion_status
 
   private
-
 
   def sync_weekly_completion_status
     week_start = workout_date.beginning_of_week(:monday)

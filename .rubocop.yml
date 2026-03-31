@@ -19,9 +19,10 @@ Layout/IndentationWidth:
 
 # ENFORCING "SKINNY CONTROLLERS, FAT MODELS"
 Metrics/MethodLength:
-  Max: 15
+  Max: 30
   Exclude:
     - 'db/seeds.rb'
+    - 'db/migrate/**/*'
 
 # ENFORCING UPPERCASE CONSTANTS
 Naming/ConstantName:

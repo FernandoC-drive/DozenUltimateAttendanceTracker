@@ -4,8 +4,8 @@ class AdminAttendanceUpdatesTest < ActionDispatch::IntegrationTest
   setup do
     # ensure unique users in case database retains rows between runs
     unique = SecureRandom.hex(4)
-    @coach = User.create!(name: "Coach", email: "coach#{unique}@example.com", password: "password", role: 1, coach: true)
-    @player = User.create!(name: "Player", email: "player#{unique}@example.com", password: "password", role: 0)
+    @coach = User.create!(name: "Coach", email: "coach#{unique}@tamu.edu", password: "password", role: 1, coach: true)
+    @player = User.create!(name: "Player", email: "player#{unique}@tamu.edu", password: "password", role: 0)
     @attendance = Attendance.create!(player: @player, date: Date.current, days_attended: 1, attended: true)
   end
 
@@ -53,9 +53,9 @@ class AdminAttendanceUpdatesTest < ActionDispatch::IntegrationTest
   def sign_in(user)
     post session_path, params: { email: user.email, password: "password" }
 
-    if user.role == "coach"
-      user.reload
-      assert user.coach, "coach flag should have been true after logging in"
-    end
+    return unless user.role == "coach"
+
+    user.reload
+    assert user.coach, "coach flag should have been true after logging in"
   end
 end

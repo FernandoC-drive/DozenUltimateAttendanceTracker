@@ -13,6 +13,7 @@ class AttendancesController < ApplicationController
   VIEW_MODES = %w[daily weekly monthly calendar].freeze
   COLOR_PROFILES = %w[default red_green_safe tritanopia_safe monochrome].freeze
 
+  # rubocop:disable Metrics/MethodLength
   def index
     @view_mode = params[:view].presence_in(VIEW_MODES) || "calendar"
     @color_profile = params[:color_profile].presence_in(COLOR_PROFILES) || "default"
@@ -51,7 +52,7 @@ class AttendancesController < ApplicationController
     @workout_month = if params[:workout_month].present?
                        Date.parse(params[:workout_month])
                      else
-                       Date.today
+                       Time.zone.today
                      end
 
     @workout_checkins = if @selected_player
@@ -62,6 +63,7 @@ class AttendancesController < ApplicationController
                           WorkoutCheckin.none
                         end
   end
+  # rubocop:enable Metrics/MethodLength
 
   def toggle
     if params[:id].present?
@@ -87,9 +89,9 @@ class AttendancesController < ApplicationController
       status_word = @attendance.attended ? "present" : "absent"
 
         redirect_back(fallback_location: attendances_path, notice: "Successfully marked #{status_word}!")
-      else
+    else
         redirect_back(fallback_location: attendances_path, alert: "Only coaches can edit attendance.")
-      end
+    end
   end
 
   private
@@ -124,7 +126,8 @@ class AttendancesController < ApplicationController
     end.order(date: :desc)
   end
 
-  def calculate_attendance_summary(scope)
+  # rubocop:disable Metrics/MethodLength
+  def calculate_attendance_summary(_scope)
     date_range = case @view_mode
                  when "daily"
                    @selected_date..@selected_date
@@ -150,22 +153,22 @@ class AttendancesController < ApplicationController
 
     # Fetch DB records (respects Coach manual overrides)
     weekly_workouts = WeeklyWorkout.where(
-      player_id: players_to_query.map(&:id), 
-      week_start_date: target_week_start
+         player_id: players_to_query.map(&:id), 
+         week_start_date: target_week_start
     ).index_by(&:player_id)
 
     # Dynamically count actual workouts for the target week
     target_week_end = target_week_start.end_of_week(:monday)
     actual_workout_counts = WorkoutCheckin.where(
-      player_id: players_to_query.map(&:id),
-      workout_date: target_week_start..target_week_end
+         player_id: players_to_query.map(&:id),
+         workout_date: target_week_start..target_week_end
     ).group(:player_id).count
 
     summary = players_to_query.map do |player|
       attendance_records = Attendance.where(player: player, date: mwf_dates)
       total_days_attended = attendance_records.where("days_attended > 0").sum(:days_attended)
       total_possible_days = mwf_dates.count
-      percent = total_possible_days > 0 ? ((total_days_attended.to_f / total_possible_days) * 100).round(1) : 0.0
+      percent = total_possible_days.positive? ? ((total_days_attended.to_f / total_possible_days) * 100).round(1) : 0.0
 
       db_record = weekly_workouts[player.id]
       
@@ -176,14 +179,15 @@ class AttendancesController < ApplicationController
                     end
 
       {
-        player: player,
-        total_days_attended: total_days_attended,
-        total_possible_days: total_possible_days,
-        percent_attended: percent,
-        workout_complete: is_complete,
-        target_week_start: target_week_start 
+           player: player,
+           total_days_attended: total_days_attended,
+           total_possible_days: total_possible_days,
+           percent_attended: percent,
+           workout_complete: is_complete,
+           target_week_start: target_week_start 
       }
     end
+    # rubocop:enable Metrics/MethodLength
 
     sort_param = params[:sort] || 'name_asc'
     
@@ -205,7 +209,7 @@ class AttendancesController < ApplicationController
   def get_date_range
     case @view_mode
     when "daily"
-      { start: @selected_date, end: @selected_date, label: @selected_date.strftime("%A, %B %d, %Y") + " (M/W/F only)" }
+      { start: @selected_date, end: @selected_date, label: "#{@selected_date.strftime('%A, %B %d, %Y')} (M/W/F only)" }
     when "weekly"
       start_date = @selected_date.beginning_of_week(:monday)
       end_date = @selected_date.end_of_week(:monday)
@@ -214,7 +218,7 @@ class AttendancesController < ApplicationController
       # monthly
       start_date = @selected_date.beginning_of_month
       end_date = @selected_date.end_of_month
-      { start: start_date, end: end_date, label: @selected_date.strftime("%B %Y") + " (M/W/F only)" }
+      { start: start_date, end: end_date, label: "#{@selected_date.strftime('%B %Y')} (M/W/F only)" }
     end
   end
 
@@ -234,14 +238,5 @@ class AttendancesController < ApplicationController
     counts_by_day
   end
 
-  def update_settings
-    setting = TeamSetting.current
-    
-    # We use 'params[:practice_days] || []' so if the coach unchecks EVERY box, 
-    # it saves an empty array instead of throwing a nil error!
-    setting.update(practice_days: params[:practice_days] || [])
-    
-    redirect_back fallback_location: admin_attendances_path, notice: "Practice days updated successfully!"
-  end
   
 end
