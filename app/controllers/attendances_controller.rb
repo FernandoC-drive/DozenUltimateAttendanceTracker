@@ -28,7 +28,6 @@ class AttendancesController < ApplicationController
                        end
     @recent_recsports_events = RecsportsEvent.includes(participants: :user).recent_first.limit(5)
 
-    @chart_month = params[:chart_month].present? ? Date.parse(params[:chart_month]) : Date.today
     @workout_chart_data = workout_chart_data  # private method from the snippet
 
     # coaches can view all players by leaving player selector blank, or pick one player.
@@ -64,6 +63,16 @@ class AttendancesController < ApplicationController
                           # If no player is selected, show nothing
                           WorkoutCheckin.none
                         end
+  end
+
+  def invalidate_workout
+    workout = WeeklyWorkout.find(params[:id])
+    if current_user.coach?
+      workout.update!(complete: false)
+      redirect_back(fallback_location: attendances_path, notice: "Workout marked invalid.")
+    else
+      redirect_back(fallback_location: attendances_path, alert: "Only coaches can edit workout statuses.")
+    end
   end
 
   def toggle
@@ -127,10 +136,8 @@ class AttendancesController < ApplicationController
     end.order(date: :desc)
   end
 
-  private
-
   def workout_chart_data
-    week_start = (@chart_month || Date.today).beginning_of_week(:monday)
+    week_start = (@selected_date).beginning_of_week(:monday)
     players    = User.where(role: :player).order(:name)
     workouts   = WeeklyWorkout.where(week_start_date: week_start).index_by(&:player_id)
     completed  = workouts.values.count(&:complete)
@@ -142,16 +149,6 @@ class AttendancesController < ApplicationController
       total: players.count,
       players: players.map { |p| { player: p, workout: workouts[p.id] } }
     }]
-  end
-
-  def invalidate_workout
-    workout = WeeklyWorkout.find(params[:id])
-    if current_user.coach?
-      workout.update!(complete: false)
-      redirect_back(fallback_location: attendances_path, notice: "Workout marked invalid.")
-    else
-      redirect_back(fallback_location: attendances_path, alert: "Only coaches can edit workout statuses.")
-    end
   end
 
   def calculate_attendance_summary(scope)
