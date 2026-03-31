@@ -29,6 +29,8 @@ class AttendancesController < ApplicationController
                        end
     @recent_recsports_events = RecsportsEvent.includes(participants: :user).recent_first.limit(5)
 
+    @workout_chart_data = workout_chart_data  # private method from the snippet
+
     # coaches can view all players by leaving player selector blank, or pick one player.
     # NB: we no longer auto-select the first player for coaches so "all players" works.
 
@@ -64,6 +66,16 @@ class AttendancesController < ApplicationController
                         end
   end
   # rubocop:enable Metrics/MethodLength
+
+  def invalidate_workout
+    workout = WeeklyWorkout.find(params[:id])
+    if current_user.coach?
+      workout.update!(complete: false)
+      redirect_back(fallback_location: attendances_path, notice: "Workout marked invalid.")
+    else
+      redirect_back(fallback_location: attendances_path, alert: "Only coaches can edit workout statuses.")
+    end
+  end
 
   def toggle
     if params[:id].present?
@@ -124,6 +136,21 @@ class AttendancesController < ApplicationController
       # monthly and calendar both use month filter
       scope.for_month(@selected_date)
     end.order(date: :desc)
+  end
+
+  def workout_chart_data
+    week_start = (@selected_date).beginning_of_week(:monday)
+    players    = User.where(role: :player).order(:name)
+    workouts   = WeeklyWorkout.where(week_start_date: week_start).index_by(&:player_id)
+    completed  = workouts.values.count(&:complete)
+
+    [{ 
+      week: week_start.strftime("%-m/%-d"),
+      week_start: week_start,
+      completed: completed,
+      total: players.count,
+      players: players.map { |p| { player: p, workout: workouts[p.id] } }
+    }]
   end
 
   # rubocop:disable Metrics/MethodLength

@@ -1,0 +1,164 @@
+<%# ============================================================
+    Workout Completion — single current week view.
+    Expects @workout_chart_data from AttendancesController#index.
+    ============================================================ %>
+
+<section class="card wc-card">
+  <h2 class="wc-heading">Workout Completion</h2>
+
+  <% if @workout_chart_data.blank? %>
+    <p class="wc-empty">No workout data available for this period.</p>
+  <% else %>
+    <% week = @workout_chart_data.first %>
+    <% pct = week[:total] > 0 ? (week[:completed].to_f / week[:total] * 100).round : 0 %>
+    <% stroke_color = pct >= 75 ? 'var(--success)' : pct >= 50 ? '#b35c00' : 'var(--error)' %>
+
+    <p class="wc-sub">Week of <%= week[:week] %></p>
+
+    <div class="wc-layout">
+
+      <%# ── Pie chart (center-left) ── %>
+      <div class="wc-pie-wrap" aria-label="<%= pct %>% of players completed their workout this week">
+        <svg class="wc-pie" viewBox="0 0 36 36">
+          <circle class="wc-ring-bg"   cx="18" cy="18" r="15.9" />
+          <circle class="wc-ring-fill" cx="18" cy="18" r="15.9"
+                  stroke="<%= stroke_color %>"
+                  stroke-dasharray="<%= (pct * 100.0 / 100).round(1) %> <%= 100 - (pct * 100.0 / 100).round(1) %>"
+                  stroke-dashoffset="25" />
+        </svg>
+        <div class="wc-pie-center">
+          <span class="wc-pct"><%= pct %><small>%</small></span>
+          <span class="wc-pie-count"><%= week[:completed] %>/<%= week[:total] %></span>
+        </div>
+      </div>
+
+      <%# ── Player table (right side) ── %>
+      <div class="wc-table-wrap">
+        <table class="wc-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Status</th>
+              <% if current_user.coach? %><th>Action</th><% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% week[:players].each do |row| %>
+              <% completed = row[:workout]&.complete %>
+              <tr>
+                <td><%= row[:player].name %></td>
+                <td>
+                  <span class="status-pill <%= completed ? 'present' : 'absent' %>">
+                    <span class="status-icon" aria-hidden="true"><%= completed ? 'C' : '—' %></span>
+                    <span><%= completed ? 'Completed' : 'Not completed' %></span>
+                  </span>
+                </td>
+                <% if current_user.coach? %>
+                  <td>
+                    <% if completed && row[:workout] %>
+                      <%= button_to "Mark Invalid",
+                            invalidate_workout_path(row[:workout]),
+                            method: :patch,
+                            form: { style: "display:inline-block; margin:0;" },
+                            style: "font-size:0.8em; padding:2px 6px;",
+                            data: { confirm: "Mark this workout as invalid?" } %>
+                    <% else %>
+                      <span class="text-muted" style="font-size:0.8em;">—</span>
+                    <% end %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  <% end %>
+</section>
+
+<style>
+.wc-card    { margin-bottom: 1rem; }
+.wc-heading { margin: 0 0 0.1rem; font-size: 1.1rem; color: var(--text); }
+.wc-sub     { margin: 0 0 1rem; font-size: 0.82rem; color: #6b7a99; }
+.wc-empty   { color: #6b7a99; font-size: 0.9rem; }
+
+/* Two-column layout: big pie on the left, table on the right */
+.wc-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+/* ── Pie ── */
+.wc-pie-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 180px;
+  height: 180px;
+}
+
+.wc-pie {
+  width: 180px;
+  height: 180px;
+  transform: rotate(-90deg);
+}
+
+.wc-ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 3.5;
+}
+
+.wc-ring-fill {
+  fill: none;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
+  animation: wc-fill-in 0.65s cubic-bezier(.22,.68,0,1.2) forwards;
+}
+
+@keyframes wc-fill-in {
+  from { stroke-dasharray: 0 100; }
+}
+
+.wc-pie-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.wc-pct       { font-size: 1.6rem; font-weight: 700; color: var(--text); line-height: 1; }
+.wc-pct small { font-size: 0.5em; color: #6b7a99; }
+.wc-pie-count { font-size: 0.78rem; color: #6b7a99; }
+
+/* ── Table ── */
+.wc-table-wrap { flex: 1; overflow-x: auto; }
+
+.wc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.wc-table th {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 2px solid var(--border);
+  color: #6b7a99;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wc-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.wc-table tr:last-child td { border-bottom: none; }
+</style>
