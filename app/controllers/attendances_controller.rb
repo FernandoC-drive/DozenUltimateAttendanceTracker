@@ -116,7 +116,7 @@ class AttendancesController < ApplicationController
       # Formats "2026-02" (from the Monthly view) into "2026-02-01" so Ruby can read it
       Date.parse("#{raw_str}-01")
     elsif raw_str.match?(/\A\d{4}-W\d{2}\z/)
-      # Formats "2026-W13" (from the Weekly view) into the Monday of that specific week
+      # Formats "2026-W13" (from the Weekly view) into the start of that specific week
       Date.strptime("#{raw_str}-1", "%G-W%V-%u")
     else
       # Handles standard "2026-03-29" from the Daily view
@@ -139,8 +139,8 @@ class AttendancesController < ApplicationController
   end
 
   def workout_chart_data
-    week_start = @selected_date.beginning_of_week(:monday)
-    week_end = week_start.end_of_week(:monday)
+    week_start = @selected_date.beginning_of_week(:sunday)
+    week_end = week_start.end_of_week(:sunday)
     players = User.where(role: :player).order(:name)
 
     # 1. Grab manual coach overrides
@@ -184,7 +184,7 @@ class AttendancesController < ApplicationController
                  when "daily"
                    @selected_date..@selected_date
                  when "weekly"
-                   @selected_date.beginning_of_week(:monday)..@selected_date.end_of_week(:sunday)
+                   @selected_date.beginning_of_week(:sunday)..@selected_date.end_of_week(:sunday)
                  else
                    @selected_date.beginning_of_month..@selected_date.end_of_month
                  end
@@ -194,12 +194,12 @@ class AttendancesController < ApplicationController
 
     target_week_start = case @view_mode
                         when "weekly"
-                          @selected_date.beginning_of_week(:monday)
+                          @selected_date.beginning_of_week(:sunday)
                         else
                           if @selected_date.beginning_of_month == Date.current.beginning_of_month
-                            Date.current.beginning_of_week(:monday)
+                            Date.current.beginning_of_week(:sunday)
                           else
-                            @selected_date.end_of_month.beginning_of_week(:monday)
+                            @selected_date.end_of_month.beginning_of_week(:sunday)
                           end
                         end
 
@@ -210,7 +210,7 @@ class AttendancesController < ApplicationController
     ).index_by(&:player_id)
 
     # Dynamically count actual workouts for the target week
-    target_week_end = target_week_start.end_of_week(:monday)
+    target_week_end = target_week_start.end_of_week(:sunday)
     actual_workout_counts = WorkoutCheckin.where(
          player_id: players_to_query.map(&:id),
          workout_date: target_week_start..target_week_end
@@ -263,8 +263,8 @@ class AttendancesController < ApplicationController
     when "daily"
       { start: @selected_date, end: @selected_date, label: "#{@selected_date.strftime('%A, %B %d, %Y')} (M/W/F only)" }
     when "weekly"
-      start_date = @selected_date.beginning_of_week(:monday)
-      end_date = @selected_date.end_of_week(:monday)
+      start_date = @selected_date.beginning_of_week(:sunday)
+      end_date = @selected_date.end_of_week(:sunday)
       { start: start_date, end: end_date, label: "Week of #{start_date.strftime('%B %d')} - #{end_date.strftime('%B %d, %Y')} (M/W/F only)" }
     else
       # monthly

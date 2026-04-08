@@ -7,7 +7,6 @@
     # Dynamically set the input type and formatting based on the current view
     input_type = case @view_mode
                  when "monthly", "calendar" then "month"
-                 when "weekly" then "week"
                  else "date"
                  end
 
@@ -123,13 +122,13 @@
       <table class="calendar">
         <thead>
           <tr>
-            <% %w[Mon Tue Wed Thu Fri Sat Sun].each do |day| %>
+            <% %w[Sun Mon Tue Wed Thu Fri Sat].each do |day| %>
               <th title="<%= day %>"><%= day %></th>
             <% end %>
           </tr>
         </thead>
         <tbody>
-          <% first = @selected_date.beginning_of_month.beginning_of_week(:monday) %>
+          <% first = @selected_date.beginning_of_month.beginning_of_week(:sunday) %>
           <% last = @selected_date.end_of_month.end_of_week(:sunday) %>
           <% (first..last).to_a.in_groups_of(7, nil) do |week| %>
             <tr>
@@ -210,13 +209,13 @@
       <table class="calendar all-players">
         <thead>
           <tr>
-            <% %w[Mon Tue Wed Thu Fri Sat Sun].each do |day| %>
+            <% %w[Sun Mon Tue Wed Thu Fri Sat].each do |day| %>
               <th title="<%= day %>"><%= day %></th>
             <% end %>
           </tr>
         </thead>
         <tbody>
-          <% first = @selected_date.beginning_of_month.beginning_of_week(:monday) %>
+          <% first = @selected_date.beginning_of_month.beginning_of_week(:sunday) %>
           <% last = @selected_date.end_of_month.end_of_week(:sunday) %>
           <% (first..last).to_a.in_groups_of(7, nil) do |week| %>
             <tr>
@@ -428,11 +427,11 @@
       <% if @workout_checkins.present? %>
           <div class="history-groups" style="display: flex; flex-direction: column; gap: 20px;">
             
-            <% @workout_checkins.group_by { |c| c.workout_date.beginning_of_week(:monday) }.sort.reverse.each do |week_start, checkins| %>
+            <% @workout_checkins.group_by { |c| c.workout_date.beginning_of_week(:sunday) }.sort.reverse.each do |week_start, checkins| %>
               <div class="week-group">
                 <h4 style="margin: 0 0 10px 0; border-bottom: 2px solid #eee; padding-bottom: 5px;">
                   Week of <%= week_start.strftime("%b %d") %> 
-                  <span style="font-size: 0.8em; color: #888; font-weight: normal;">(Mon - Sun)</span>
+                  <span style="font-size: 0.8em; color: #888; font-weight: normal;">(Sun - Sat)</span>
                 </h4>
                 
                 <ul class="history-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;">
@@ -523,11 +522,11 @@
         <% if @workout_checkins.present? %>
           <div class="history-groups" style="display: flex; flex-direction: column; gap: 20px;">
             
-            <% @workout_checkins.group_by { |c| c.workout_date.beginning_of_week(:monday) }.sort.reverse.each do |week_start, checkins| %>
+            <% @workout_checkins.group_by { |c| c.workout_date.beginning_of_week(:sunday) }.sort.reverse.each do |week_start, checkins| %>
               <div class="week-group">
                 <h4 style="margin: 0 0 10px 0; border-bottom: 2px solid #eee; padding-bottom: 5px;">
                   Week of <%= week_start.strftime("%b %d") %> 
-                  <span style="font-size: 0.8em; color: #888; font-weight: normal;">(Mon - Sun)</span>
+                  <span style="font-size: 0.8em; color: #888; font-weight: normal;">(Sun - Sat)</span>
                 </h4>
                 
                 <ul class="history-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;">
