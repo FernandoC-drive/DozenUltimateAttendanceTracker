@@ -139,6 +139,12 @@
                     attendance = @calendar_attendances[day] 
                     is_practice_day = TeamSetting.current.practice_days_ints.include?(day.wday)
                     
+                    # NEW: Clean up off-days! If a day is an off day and the player was marked absent,
+                    # we pretend the record doesn't exist so it visually reverts to a regular "Off Day".
+                    if attendance && !attendance.attended && !is_practice_day
+                      attendance = nil
+                    end
+
                     # Default to light gray for Off Days, transparent for Practice Days
                     bg_color = is_practice_day ? "transparent" : "#f5f5f5"
                     
@@ -188,7 +194,8 @@
                       <div style="font-size: 0.8em; color: #aaa; margin-top: 5px; font-style: italic;" title="This is not a required practice day">Off Day</div>
                     <% end %>
 
-                    <% if current_user.coach? %>
+                    <%# Hide the toggle button if it is not an official practice day %>
+                    <% if current_user.coach? && is_practice_day %>
                       <%= button_to "Toggle", toggle_attendances_path(date: day, player_id: @selected_player.id), method: :patch,
                                   form: { style: "display: inline-block; margin-top: auto;" },
                                   class: "toggle-link",
@@ -260,20 +267,28 @@
                       subtext_color = level > 2 ? '#dddddd' : '#777777'
                     %>
                     
-                    <div style="background-color: <%= bg_color %>; height: 100%; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px;" title="<%= count %> out of <%= @players.count %> players attended on this day">
-                      
-                      <div class="day-number" style="font-weight: bold; color: <%= text_color %>;"><%= day.day %></div>
-                      
-                      <div class="attendance-count" style="color: <%= subtext_color %>; font-size: 0.9em; font-weight: 500; text-align: center;">
-                        <strong><%= count %></strong><br>
-                        <% if count > 0 %>
-                          <small><%= count == 1 ? "player" : "players" %></small>
-                        <% else %>
-                          <small>–</small>
-                        <% end %>
+                    <%= link_to attendances_path(request.query_parameters.merge(date: day.strftime("%Y-%m-%d"), view: 'daily', sort: 'percent_desc')), 
+                                style: "text-decoration: none; display: block; height: 100%;",
+                                title: "View detailed attendance for #{day.strftime('%b %d')}" do %>
+                                
+                      <div style="background-color: <%= bg_color %>; height: 100%; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px; transition: filter 0.2s;" 
+                          onmouseover="this.style.filter='brightness(0.95)';" 
+                          onmouseout="this.style.filter='none';"
+                          title="<%= count %> out of <%= @players.count %> players attended on this day">
+                        
+                        <div class="day-number" style="font-weight: bold; color: <%= text_color %>;"><%= day.day %></div>
+                        
+                        <div class="attendance-count" style="color: <%= subtext_color %>; font-size: 0.9em; font-weight: 500; text-align: center;">
+                          <strong><%= count %></strong><br>
+                          <% if count > 0 %>
+                            <small><%= count == 1 ? "player" : "players" %></small>
+                          <% else %>
+                            <small>–</small>
+                          <% end %>
+                        </div>
                       </div>
-                      
-                    </div>
+                    <% end %>
+                
                   <% end %>
                 </td>
               <% end %>

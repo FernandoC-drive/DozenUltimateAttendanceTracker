@@ -164,7 +164,17 @@ class AttendancesController < ApplicationController
   end
 
   def workout_chart_data
-    week_start = @selected_date.beginning_of_week(:sunday)
+    week_start = case @view_mode
+                 when "weekly"
+                   @selected_date.beginning_of_week(:sunday)
+                 else
+                   if @selected_date.beginning_of_month == Date.current.beginning_of_month
+                     Date.current.beginning_of_week(:sunday)
+                   else
+                     @selected_date.end_of_month.beginning_of_week(:sunday)
+                   end
+                 end
+                 
     week_end = week_start.end_of_week(:sunday)
     players = User.where(role: :player).order(:name)
 
@@ -214,7 +224,11 @@ class AttendancesController < ApplicationController
                    @selected_date.beginning_of_month..@selected_date.end_of_month
                  end
 
-    mwf_dates = (date_range.begin..date_range.end).select { |d| TeamSetting.current.practice_days_ints.include?(d.wday) }
+    mwf_dates = if @view_mode == "daily"
+                  [@selected_date] 
+                else
+                  (date_range.begin..date_range.end).select { |d| TeamSetting.current.practice_days_ints.include?(d.wday) }
+                end
     players_to_query = @selected_player ? [@selected_player] : User.where(role: :player).order(:name)
 
     target_week_start = case @view_mode
@@ -304,7 +318,7 @@ class AttendancesController < ApplicationController
     month_end = @selected_date.end_of_month
     
     # Get all attendance records for the month for all players
-    month_attendances = Attendance.where(date: month_start..month_end).where("days_attended > 0")
+    month_attendances = Attendance.where(date: month_start..month_end, attended: true)
     
     # Group by date and count attendees per day
     counts_by_day = {}
