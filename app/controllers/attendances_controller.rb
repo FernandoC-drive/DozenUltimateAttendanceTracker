@@ -52,7 +52,7 @@ class AttendancesController < ApplicationController
     @selected_date = parse_date(params[:date])
 
     # everyone can optionally pick a player to view
-    @players = User.where(role: :player).order(:name)
+    @players = User.where(role: [:player, :coach]).order(:name)
     @selected_player = if params.key?(:player_id)
                          User.find_by(id: params[:player_id])
                        else
@@ -176,7 +176,7 @@ class AttendancesController < ApplicationController
                  end
                  
     week_end = week_start.end_of_week(:sunday)
-    players = User.where(role: :player).order(:name)
+    players = User.where(role: [:player, :coach]).order(:name)
 
     # 1. Grab manual coach overrides
     workouts = WeeklyWorkout.where(week_start_date: week_start).index_by(&:player_id)
@@ -229,7 +229,7 @@ class AttendancesController < ApplicationController
                 else
                   (date_range.begin..date_range.end).select { |d| TeamSetting.current.practice_days_ints.include?(d.wday) }
                 end
-    players_to_query = @selected_player ? [@selected_player] : User.where(role: :player).order(:name)
+    players_to_query = @selected_player ? [@selected_player] : User.where(role: [:player, :coach]).order(:name)
 
     target_week_start = case @view_mode
                         when "weekly"

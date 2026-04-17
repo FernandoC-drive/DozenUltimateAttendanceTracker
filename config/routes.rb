@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   resource :session, only: %i[new create destroy]
+  resources :members, only: [:destroy]
 
   devise_for :users, controllers: { omniauth_callbacks: 'users/omniauth_callbacks' }
   

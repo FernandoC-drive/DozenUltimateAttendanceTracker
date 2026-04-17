@@ -396,7 +396,7 @@
       <p>Workout history and check-ins for <%= @selected_player.name %>.</p>
     </header>
 
-    <% if current_user == @selected_player && current_user.player? %>
+    <% if current_user == @selected_player %>
       <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path, local: true, class: "workout-form" do |f| %>
         <%= f.hidden_field :player_id, value: @selected_player.id %>
         <div class="form-group">
