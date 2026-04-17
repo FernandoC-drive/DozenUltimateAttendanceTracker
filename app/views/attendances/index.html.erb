@@ -1,7 +1,10 @@
 <% content_for :title, "Attendance" %>
 
 <section class="card attendance-visualization palette-<%= @color_profile %>">
-  <h2>Attendance</h2>
+  <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+    <%= image_tag "DozenUltimateLogo.png", alt: "Dozen Ultimate Logo", style: "height: 70px; width: auto; object-fit: contain;" %>
+    <h2 style="margin: 0; font-size: 2rem;">Attendance</h2>
+  </div>
 
  <%
     # Dynamically set the input type and formatting based on the current view
@@ -12,7 +15,7 @@
 
     formatted_date = case @view_mode
                      when "monthly", "calendar" then @selected_date.strftime("%Y-%m")
-                     when "weekly" then @selected_date.strftime("%Y-W%V")
+                     when "weekly" then @selected_date.strftime("%Y-%m-%d")
                      else @selected_date.strftime("%Y-%m-%d")
                      end
   %>
@@ -66,7 +69,7 @@
             <label title="Select the time period format to view"><strong>View:</strong></label>
             <div class="toggle-group" title="Toggle between Calendar, Monthly, Weekly, or Daily views">
               <% ['calendar', 'monthly', 'weekly', 'daily'].each do |mode| %>
-                <%= radio_button_tag :view, mode, @view_mode == mode, onchange: 'document.getElementById("date").value=""; this.form.submit();', class: "toggle-input", id: "view_#{mode}" %>
+                <%= radio_button_tag :view, mode, @view_mode == mode, onchange: 'this.form.submit();', class: "toggle-input", id: "view_#{mode}" %>
                 <label for="view_<%= mode %>" class="toggle-label"><%= mode.capitalize %></label>
               <% end %>
             </div>
@@ -139,6 +142,12 @@
                     attendance = @calendar_attendances[day] 
                     is_practice_day = TeamSetting.current.practice_days_ints.include?(day.wday)
                     
+                    # NEW: Clean up off-days! If a day is an off day and the player was marked absent,
+                    # we pretend the record doesn't exist so it visually reverts to a regular "Off Day".
+                    if attendance && !attendance.attended && !is_practice_day
+                      attendance = nil
+                    end
+
                     # Default to light gray for Off Days, transparent for Practice Days
                     bg_color = is_practice_day ? "transparent" : "#f5f5f5"
                     
@@ -188,7 +197,8 @@
                       <div style="font-size: 0.8em; color: #aaa; margin-top: 5px; font-style: italic;" title="This is not a required practice day">Off Day</div>
                     <% end %>
 
-                    <% if current_user.coach? %>
+                    <%# Hide the toggle button if it is not an official practice day %>
+                    <% if current_user.coach? && is_practice_day %>
                       <%= button_to "Toggle", toggle_attendances_path(date: day, player_id: @selected_player.id), method: :patch,
                                   form: { style: "display: inline-block; margin-top: auto;" },
                                   class: "toggle-link",
@@ -260,20 +270,28 @@
                       subtext_color = level > 2 ? '#dddddd' : '#777777'
                     %>
                     
-                    <div style="background-color: <%= bg_color %>; height: 100%; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px;" title="<%= count %> out of <%= @players.count %> players attended on this day">
-                      
-                      <div class="day-number" style="font-weight: bold; color: <%= text_color %>;"><%= day.day %></div>
-                      
-                      <div class="attendance-count" style="color: <%= subtext_color %>; font-size: 0.9em; font-weight: 500; text-align: center;">
-                        <strong><%= count %></strong><br>
-                        <% if count > 0 %>
-                          <small><%= count == 1 ? "player" : "players" %></small>
-                        <% else %>
-                          <small>–</small>
-                        <% end %>
+                    <%= link_to attendances_path(request.query_parameters.merge(date: day.strftime("%Y-%m-%d"), view: 'daily', sort: 'percent_desc')), 
+                                style: "text-decoration: none; display: block; height: 100%;",
+                                title: "View detailed attendance for #{day.strftime('%b %d')}" do %>
+                                
+                      <div style="background-color: <%= bg_color %>; height: 100%; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px; transition: filter 0.2s;" 
+                          onmouseover="this.style.filter='brightness(0.95)';" 
+                          onmouseout="this.style.filter='none';"
+                          title="<%= count %> out of <%= @players.count %> players attended on this day">
+                        
+                        <div class="day-number" style="font-weight: bold; color: <%= text_color %>;"><%= day.day %></div>
+                        
+                        <div class="attendance-count" style="color: <%= subtext_color %>; font-size: 0.9em; font-weight: 500; text-align: center;">
+                          <strong><%= count %></strong><br>
+                          <% if count > 0 %>
+                            <small><%= count == 1 ? "player" : "players" %></small>
+                          <% else %>
+                            <small>–</small>
+                          <% end %>
+                        </div>
                       </div>
-                      
-                    </div>
+                    <% end %>
+                
                   <% end %>
                 </td>
               <% end %>
@@ -381,7 +399,7 @@
       <p>Workout history and check-ins for <%= @selected_player.name %>.</p>
     </header>
 
-    <% if current_user == @selected_player && current_user.player? %>
+    <% if current_user == @selected_player %>
       <%= form_with model: WorkoutCheckin.new, url: workout_checkins_path, local: true, class: "workout-form" do |f| %>
         <%= f.hidden_field :player_id, value: @selected_player.id %>
         <div class="form-group">
@@ -413,12 +431,11 @@
 
 
 
-    <div class="workout-history">
-      <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <%= link_to "← Previous", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;", title: "View previous month's workouts" %>
-        <h3 style="margin: 0;"><%= @workout_month.strftime("%B %Y") %></h3>
-        <% if @workout_month.beginning_of_month < Date.today.beginning_of_month %>
-          <%= link_to "Next →", attendances_path(player_id: @selected_player.id, workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;", title: "View next month's workouts" %>
+    <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <%= link_to "← Previous", attendances_path(request.query_parameters.merge(date: @selected_date.last_month.strftime("%Y-%m-%d"))), class: "btn-secondary", style: "text-decoration: none;", title: "View previous month's workouts" %>
+        <h3 style="margin: 0;"><%= @selected_date.strftime("%B %Y") %></h3>
+        <% if @selected_date.beginning_of_month < Date.today.beginning_of_month %>
+          <%= link_to "Next →", attendances_path(request.query_parameters.merge(date: @selected_date.next_month.strftime("%Y-%m-%d"))), class: "btn-secondary", style: "text-decoration: none;", title: "View next month's workouts" %>
         <% else %>
           <span class="text-muted" style="opacity: 0.5;">Next →</span>
         <% end %>
@@ -444,21 +461,29 @@
                   <% checkins.each do |checkin| %>
                     <li class="history-item" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; <%= 'opacity: 0.5; filter: grayscale(100%); pointer-events: none;' if is_overridden %>">
                       
-                      <strong><%= checkin.workout_date.strftime("%a, %b %d") %></strong> 
+                      <%# Only show the date if it's a REAL workout %>
+                      <% unless checkin.proof_url == "Coach Override" %>
+                        <strong><%= checkin.workout_date.strftime("%a, %b %d") %></strong> 
+                      <% end %>
                       
+                      <%# Render the proof link, image, or magic badge %>
                       <% if checkin.proof_image.attached? %>
                         <%= image_tag checkin.proof_image, style: "width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;" %>
                         <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em; #{'pointer-events: auto;' if is_overridden}", title: "Open the full uploaded image in a new tab" %>
+                      <% elsif checkin.proof_url == "Coach Override" %>
+                        <span style="color: var(--success, #2e8b57); font-weight: bold; background: var(--status-present-bg, #e6f4ea); padding: 2px 8px; border-radius: 12px; font-size: 0.85em;">Coach marked as completed</span>
                       <% elsif checkin.proof_url.present? %>
                         - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link", style: "#{'pointer-events: auto;' if is_overridden}", title: "Open the provided workout link in a new tab" %>
                       <% else %>
                         - <span class="text-muted">No proof provided</span>
                       <% end %>
 
-                      <% unless is_overridden %>
-                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;", title: "Permanently delete this workout check-in" %>
-                      <% else %>
+                      <%# Explicitly handle the right-side actions %>
+                      <% if checkin.proof_url == "Coach Override" %>
+                      <% elsif is_overridden %>
                         <span style="margin-left: auto; color: #d9534f; font-size: 0.8em; font-weight: bold;" title="A coach has marked this week's workouts as incomplete">Rejected by Coach</span>
+                      <% else %>
+                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;", title: "Permanently delete this workout check-in" %>
                       <% end %>
                     </li>
                   <% end %>
@@ -468,7 +493,7 @@
 
           </div>
         <% else %>
-          <p class="empty-state">No workouts logged for <%= @workout_month.strftime("%B") %>.</p>
+          <p class="empty-state">No workouts logged for <%= @selected_date.strftime("%B") %>.</p>
         <% end %>
     </div>
   </section>
@@ -508,16 +533,15 @@
         </div>
       <% end %>
 
-      <div class="workout-history">
-        <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <%= link_to "← Previous", attendances_path(workout_month: @workout_month.last_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;", title: "View previous month's workouts" %>
-          <h3 style="margin: 0;"><%= @workout_month.strftime("%B %Y") %></h3>
-          <% if @workout_month.beginning_of_month < Date.today.beginning_of_month %>
-            <%= link_to "Next →", attendances_path(workout_month: @workout_month.next_month.strftime("%Y-%m-%d")), class: "btn-secondary", style: "text-decoration: none;", title: "View next month's workouts" %>
-          <% else %>
-            <span class="text-muted" style="opacity: 0.5;">Next →</span>
-          <% end %>
-        </div>
+      <div class="month-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <%= link_to "← Previous", attendances_path(request.query_parameters.merge(date: @selected_date.last_month.strftime("%Y-%m-%d"))), class: "btn-secondary", style: "text-decoration: none;", title: "View previous month's workouts" %>
+        <h3 style="margin: 0;"><%= @selected_date.strftime("%B %Y") %></h3>
+        <% if @selected_date.beginning_of_month < Date.today.beginning_of_month %>
+          <%= link_to "Next →", attendances_path(request.query_parameters.merge(date: @selected_date.next_month.strftime("%Y-%m-%d"))), class: "btn-secondary", style: "text-decoration: none;", title: "View next month's workouts" %>
+        <% else %>
+          <span class="text-muted" style="opacity: 0.5;">Next →</span>
+        <% end %>
+      </div>
 
         <% if @workout_checkins.present? %>
           <div class="history-groups" style="display: flex; flex-direction: column; gap: 20px;">
@@ -539,21 +563,29 @@
                   <% checkins.each do |checkin| %>
                     <li class="history-item" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; <%= 'opacity: 0.5; filter: grayscale(100%); pointer-events: none;' if is_overridden %>">
                       
-                      <strong><%= checkin.workout_date.strftime("%a, %b %d") %></strong> 
+                      <%# Only show the date if it's a REAL workout %>
+                      <% unless checkin.proof_url == "Coach Override" %>
+                        <strong><%= checkin.workout_date.strftime("%a, %b %d") %></strong> 
+                      <% end %>
                       
+                      <%# Render the proof link, image, or magic badge %>
                       <% if checkin.proof_image.attached? %>
                         <%= image_tag checkin.proof_image, style: "width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;" %>
                         <%= link_to "(View Full)", url_for(checkin.proof_image), target: "_blank", rel: "noreferrer", class: "proof-link", style: "font-size: 0.85em; #{'pointer-events: auto;' if is_overridden}", title: "Open the full uploaded image in a new tab" %>
+                      <% elsif checkin.proof_url == "Coach Override" %>
+                        <span style="color: var(--success, #2e8b57); font-weight: bold; background: var(--status-present-bg, #e6f4ea); padding: 2px 8px; border-radius: 12px; font-size: 0.85em;">Coach marked as completed</span>
                       <% elsif checkin.proof_url.present? %>
                         - <%= link_to "View Proof Link", checkin.proof_url, target: "_blank", rel: "noreferrer", class: "proof-link", style: "#{'pointer-events: auto;' if is_overridden}", title: "Open the provided workout link in a new tab" %>
                       <% else %>
                         - <span class="text-muted">No proof provided</span>
                       <% end %>
 
-                      <% unless is_overridden %>
-                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;", title: "Permanently delete this workout check-in" %>
-                      <% else %>
+                      <%# Explicitly handle the right-side actions %>
+                      <% if checkin.proof_url == "Coach Override" %>
+                      <% elsif is_overridden %>
                         <span style="margin-left: auto; color: #d9534f; font-size: 0.8em; font-weight: bold;" title="A coach has marked this week's workouts as incomplete">Rejected by Coach</span>
+                      <% else %>
+                        <%= button_to "Delete", workout_checkin_path(checkin), method: :delete, data: { turbo_confirm: "Delete this workout?" }, form: { style: "margin-left: auto;" }, style: "color: #d9534f; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85em;", title: "Permanently delete this workout check-in" %>
                       <% end %>
                     </li>
                   <% end %>
@@ -563,7 +595,7 @@
 
           </div>
         <% else %>
-          <p class="empty-state">No workouts logged for <%= @workout_month.strftime("%B") %>.</p>
+          <p class="empty-state">No workouts logged for <%= @selected_date.strftime("%B") %>.</p>
         <% end %>
       </div>
     </section>

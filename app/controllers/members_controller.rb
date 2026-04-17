@@ -1,5 +1,5 @@
 class MembersController < ApplicationController
-  before_action :set_member, only: %i[ show edit update destroy ]
+  before_action :set_member, only: %i[ show edit update ]
 
   # GET /members or /members.json
   def index
@@ -49,11 +49,21 @@ class MembersController < ApplicationController
 
   # DELETE /members/1 or /members/1.json
   def destroy
-    @member.destroy!
+    # Security check
+    unless current_user.coach?
+      redirect_to root_path, alert: "You are not authorized to perform this action."
+      return
+    end
 
-    respond_to do |format|
-      format.html { redirect_to members_path, notice: "Member was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
+    # Grab the ID from the dropdown IF the URL is our placeholder
+    target_id = params[:id] == 'placeholder' ? params[:player_to_delete] : params[:id]
+
+    user = User.find(target_id)
+    
+    if user.destroy
+      redirect_back(fallback_location: root_path, notice: "#{user.name} and all associated data have been permanently deleted.")
+    else
+      redirect_back(fallback_location: root_path, alert: "Failed to delete user.")
     end
   end
 
