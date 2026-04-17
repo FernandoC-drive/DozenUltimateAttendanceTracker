@@ -1,7 +1,10 @@
 <% content_for :title, "Attendance" %>
 
 <section class="card attendance-visualization palette-<%= @color_profile %>">
-  <h2>Attendance</h2>
+  <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+    <%= image_tag "DozenUltimateLogo.png", alt: "Dozen Ultimate Logo", style: "height: 70px; width: auto; object-fit: contain;" %>
+    <h2 style="margin: 0; font-size: 2rem;">Attendance</h2>
+  </div>
 
  <%
     # Dynamically set the input type and formatting based on the current view
