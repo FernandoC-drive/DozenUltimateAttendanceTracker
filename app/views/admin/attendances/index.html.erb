@@ -37,8 +37,8 @@
         
         <% 
           days_map = [
-            { name: 'Mon', num: 1 }, { name: 'Tue', num: 2 }, { name: 'Wed', num: 3 }, 
-            { name: 'Thu', num: 4 }, { name: 'Fri', num: 5 }, { name: 'Sat', num: 6 }, { name: 'Sun', num: 0 }
+            { name: 'Sun', num: 0 }, { name: 'Mon', num: 1 }, { name: 'Tue', num: 2 }, { name: 'Wed', num: 3 }, 
+            { name: 'Thu', num: 4 }, { name: 'Fri', num: 5 }, { name: 'Sat', num: 6 }
           ]
         %>
         
@@ -53,6 +53,40 @@
         <%= f.submit "Save Practice Days", class: "btn-primary" %>
       </div>
     <% end %>
+  </section>
+
+  <section class="card admin-card" style="border-top: 4px solid #d9534f;">
+    <div class="card-header">
+      <h3 style="color: #d9534f; margin: 0;">Roster Management</h3>
+      <p class="text-muted" style="font-size: 0.9em; margin-top: 5px;">
+        Permanently remove a player from the system. <strong>Warning:</strong> This will instantly delete all of their attendance records, workout check-ins, and historical data. This cannot be undone.
+      </p>
+    </div>
+
+    <div class="card-body" style="margin-top: 15px;">
+      <% players = User.where(role: [:player, :coach]).order(:name) %>
+      
+      <% if players.any? %>
+        <%= form_with url: '/members/placeholder', method: :delete, id: "delete-player-form", data: { turbo: false } do |f| %>
+          
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <select name="player_to_delete" id="player_to_delete" class="form-control" style="flex: 1; min-width: 200px; padding: 8px; border-radius: 4px; border: 1px solid #ccc;" required>
+              <option value="" disabled selected>Select a player to delete...</option>
+              <% players.each do |player| %>
+                <option value="<%= player.id %>"><%= player.name %></option>
+              <% end %>
+            </select>
+
+            <button type="submit" class="btn btn-danger" style="background-color: #d9534f; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="return confirmDelete(event);">
+              Permanently Delete
+            </button>
+          </div>
+
+        <% end %>
+      <% else %>
+        <p class="text-muted"><em>There are currently no players in the system.</em></p>
+      <% end %>
+    </div>
   </section>
 
   <section class="card">
@@ -122,4 +156,27 @@
       });
     }
   });
+
+
+  function confirmDelete(event) {
+    const select = document.getElementById('player_to_delete');
+    const playerId = select.value;
+    
+    if (!playerId) {
+      alert("Please select a player first.");
+      event.preventDefault();
+      return false;
+    }
+
+    const playerName = select.options[select.selectedIndex].text;
+    const isConfirmed = confirm(`CRITICAL WARNING:\n\nAre you absolutely sure you want to permanently delete ${playerName}?\n\nAll attendance and workout data will be lost forever. Type OK to continue.`);
+    
+    // If they click cancel, stop the form. Otherwise, let it submit
+    if (!isConfirmed) {
+      event.preventDefault();
+      return false;
+    }
+    
+    return true;
+  }
 </script>
