@@ -1,7 +1,10 @@
 <% content_for :title, "Sign in" %>
 
 <section class="card">
-  <h2>Sign in</h2>
+  <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+    <%= image_tag "DozenUltimateLogo.png", alt: "Dozen Ultimate Logo", style: "height: 70px; width: auto; object-fit: contain;" %>
+    <h2 style="margin: 0; font-size: 2rem;">Sign in</h2>
+  </div>
   <%= form_with url: session_path, method: :post do |f| %>
     <div class="field">
       <%= f.label :email %>

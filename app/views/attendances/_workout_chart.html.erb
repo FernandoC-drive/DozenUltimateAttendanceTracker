@@ -3,7 +3,7 @@
     Expects @workout_chart_data from AttendancesController#index.
     ============================================================ %>
 
-<section class="card wc-card">
+<section class="card wc-card attendance-visualization palette-<%= @color_profile %>">
   <h2 class="wc-heading">Workout Completion</h2>
 
   <% if @workout_chart_data.blank? %>
@@ -11,7 +11,24 @@
   <% else %>
     <% week = @workout_chart_data.first %>
     <% pct = week[:total] > 0 ? (week[:completed].to_f / week[:total] * 100).round : 0 %>
-    <% stroke_color = pct >= 75 ? 'var(--success)' : pct >= 50 ? '#b35c00' : 'var(--error)' %>
+    
+    <% 
+      # Map the calculated percentage to the 0-4 heat levels
+      heat_level = if pct == 0
+                     0
+                   elsif pct < 25
+                     1
+                   elsif pct < 50
+                     2
+                   elsif pct < 75
+                     3
+                   else
+                     4
+                   end
+                   
+      # Tell the ring to use the dynamic CSS variable for that heat level
+      stroke_color = heat_level > 0 ? "var(--heat-#{heat_level}-bg)" : "var(--status-absent-text)" 
+    %>
 
     <p class="wc-sub">Week of <%= week[:week] %></p>
 
@@ -23,8 +40,7 @@
           <circle class="wc-ring-bg"   cx="18" cy="18" r="15.9" />
           <circle class="wc-ring-fill" cx="18" cy="18" r="15.9"
                   stroke="<%= stroke_color %>"
-                  style="--pct: <%= pct %>;"
-                  stroke-dashoffset="25" />
+                  style="--pct: <%= pct %>;" />
         </svg>
         <div class="wc-pie-center">
           <span class="wc-pct"><%= pct %><small>%</small></span>
@@ -161,4 +177,23 @@
 }
 
 .wc-table tr:last-child td { border-bottom: none; }
+
+/* ── Dynamic Status Pills ── */
+.wc-card .status-pill.present {
+  background-color: var(--status-present-bg);
+  color: var(--status-present-text);
+  border: 1px solid var(--status-present-text);
+}
+
+.wc-card .status-pill.absent {
+  background-color: var(--status-absent-bg);
+  color: var(--status-absent-text);
+  border: 1px dashed var(--status-absent-text);
+}
+
+/* Make the icon span match the color */
+.wc-card .status-icon {
+  font-weight: bold;
+  margin-right: 4px;
+}
 </style>

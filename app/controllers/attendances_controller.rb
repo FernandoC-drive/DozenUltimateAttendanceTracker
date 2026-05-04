@@ -1,11 +1,43 @@
 class AttendancesController < ApplicationController
   # Coach can toggle workout completion for a player/week
   def toggle_workout_complete
-    # You may want to use your own auth logic here
     player = User.find(params[:player_id])
-    week_start = Date.parse(params[:week_start])
+    
+    week_start = Date.parse(params[:week_start]).beginning_of_week(:sunday)
+    week_end = week_start.end_of_week(:sunday)
+    
     weekly = WeeklyWorkout.find_or_create_by!(player: player, week_start_date: week_start)
-    weekly.update!(complete: !weekly.complete)
+    new_status = !weekly.complete
+    weekly.update!(complete: new_status)
+    
+    if new_status == true
+      # Coach marked it valid. How many REAL check-ins do they have?
+      existing_count = player.workout_checkins.where(workout_date: week_start..week_end).count
+      
+      # If they have less than 2, pad the difference with dummy records.
+      # If they already have 2 (meaning the coach is just restoring previously valid evidence), this skips entirely!
+      if existing_count < 2
+        # Figure out which days this week the player HASN'T logged a workout yet
+        existing_dates = player.workout_checkins.where(workout_date: week_start..week_end).pluck(:workout_date)
+        available_dates = (week_start..week_end).to_a - existing_dates
+        
+        # Grab just enough empty days to reach the 2-workout requirement
+        dates_to_use = available_dates.take(2 - existing_count)
+        
+        dates_to_use.each do |available_date|
+          dummy_record = player.workout_checkins.build(
+            workout_date: available_date,
+            proof_url: "Coach Override"
+          )
+          dummy_record.save(validate: false)
+        end
+      end
+    else
+      # Coach marked it invalid. Clean up any dummy records for this week
+      # so the player doesn't accidentally get credit from the automated counter
+      player.workout_checkins.where(workout_date: week_start..week_end, proof_url: "Coach Override").destroy_all
+    end
+
     redirect_back(fallback_location: attendances_path, notice: "Workout completion updated.")
   end
   before_action :require_login!
@@ -20,7 +52,7 @@ class AttendancesController < ApplicationController
     @selected_date = parse_date(params[:date])
 
     # everyone can optionally pick a player to view
-    @players = User.where(role: :player).order(:name)
+    @players = User.where(role: [:player, :coach]).order(:name)
     @selected_player = if params.key?(:player_id)
                          User.find_by(id: params[:player_id])
                        else
@@ -51,17 +83,10 @@ class AttendancesController < ApplicationController
       @attendance_counts_by_day = calculate_attendance_counts_by_day
     end
 
-    @workout_month = if params[:workout_month].present?
-                       Date.parse(params[:workout_month])
-                     else
-                       Time.zone.today
-                     end
-
     @workout_checkins = if @selected_player
-                          # When viewing a specific player, show their workout checkins
-                          @selected_player.workout_checkins.where(workout_date: @workout_month.beginning_of_month..@workout_month.end_of_month)
+                          # Sync month with selected month from attendance table.
+                          @selected_player.workout_checkins.where(workout_date: @selected_date.beginning_of_month..@selected_date.end_of_month)
                         else
-                          # If no player is selected, show nothing
                           WorkoutCheckin.none
                         end
   end
@@ -116,7 +141,7 @@ class AttendancesController < ApplicationController
       # Formats "2026-02" (from the Monthly view) into "2026-02-01" so Ruby can read it
       Date.parse("#{raw_str}-01")
     elsif raw_str.match?(/\A\d{4}-W\d{2}\z/)
-      # Formats "2026-W13" (from the Weekly view) into the Monday of that specific week
+      # Formats "2026-W13" (from the Weekly view) into the start of that specific week
       Date.strptime("#{raw_str}-1", "%G-W%V-%u")
     else
       # Handles standard "2026-03-29" from the Daily view
@@ -139,9 +164,19 @@ class AttendancesController < ApplicationController
   end
 
   def workout_chart_data
-    week_start = @selected_date.beginning_of_week(:monday)
-    week_end = week_start.end_of_week(:monday)
-    players = User.where(role: :player).order(:name)
+    week_start = case @view_mode
+                 when "weekly"
+                   @selected_date.beginning_of_week(:sunday)
+                 else
+                   if @selected_date.beginning_of_month == Date.current.beginning_of_month
+                     Date.current.beginning_of_week(:sunday)
+                   else
+                     @selected_date.end_of_month.beginning_of_week(:sunday)
+                   end
+                 end
+                 
+    week_end = week_start.end_of_week(:sunday)
+    players = User.where(role: [:player, :coach]).order(:name)
 
     # 1. Grab manual coach overrides
     workouts = WeeklyWorkout.where(week_start_date: week_start).index_by(&:player_id)
@@ -184,22 +219,26 @@ class AttendancesController < ApplicationController
                  when "daily"
                    @selected_date..@selected_date
                  when "weekly"
-                   @selected_date.beginning_of_week(:monday)..@selected_date.end_of_week(:sunday)
+                   @selected_date.beginning_of_week(:sunday)..@selected_date.end_of_week(:sunday) 
                  else
                    @selected_date.beginning_of_month..@selected_date.end_of_month
                  end
 
-    mwf_dates = (date_range.begin..date_range.end).select { |d| TeamSetting.current.practice_days_ints.include?(d.wday) }
-    players_to_query = @selected_player ? [@selected_player] : User.where(role: :player).order(:name)
+    mwf_dates = if @view_mode == "daily"
+                  [@selected_date] 
+                else
+                  (date_range.begin..date_range.end).select { |d| TeamSetting.current.practice_days_ints.include?(d.wday) }
+                end
+    players_to_query = @selected_player ? [@selected_player] : User.where(role: [:player, :coach]).order(:name)
 
     target_week_start = case @view_mode
                         when "weekly"
-                          @selected_date.beginning_of_week(:monday)
+                          @selected_date.beginning_of_week(:sunday)
                         else
                           if @selected_date.beginning_of_month == Date.current.beginning_of_month
-                            Date.current.beginning_of_week(:monday)
+                            Date.current.beginning_of_week(:sunday)
                           else
-                            @selected_date.end_of_month.beginning_of_week(:monday)
+                            @selected_date.end_of_month.beginning_of_week(:sunday)
                           end
                         end
 
@@ -210,7 +249,7 @@ class AttendancesController < ApplicationController
     ).index_by(&:player_id)
 
     # Dynamically count actual workouts for the target week
-    target_week_end = target_week_start.end_of_week(:monday)
+    target_week_end = target_week_start.end_of_week(:sunday)
     actual_workout_counts = WorkoutCheckin.where(
          player_id: players_to_query.map(&:id),
          workout_date: target_week_start..target_week_end
@@ -263,8 +302,8 @@ class AttendancesController < ApplicationController
     when "daily"
       { start: @selected_date, end: @selected_date, label: "#{@selected_date.strftime('%A, %B %d, %Y')} (M/W/F only)" }
     when "weekly"
-      start_date = @selected_date.beginning_of_week(:monday)
-      end_date = @selected_date.end_of_week(:monday)
+      start_date = @selected_date.beginning_of_week(:sunday)
+      end_date = @selected_date.end_of_week(:sunday)
       { start: start_date, end: end_date, label: "Week of #{start_date.strftime('%B %d')} - #{end_date.strftime('%B %d, %Y')} (M/W/F only)" }
     else
       # monthly
@@ -279,7 +318,7 @@ class AttendancesController < ApplicationController
     month_end = @selected_date.end_of_month
     
     # Get all attendance records for the month for all players
-    month_attendances = Attendance.where(date: month_start..month_end).where("days_attended > 0")
+    month_attendances = Attendance.where(date: month_start..month_end, attended: true)
     
     # Group by date and count attendees per day
     counts_by_day = {}

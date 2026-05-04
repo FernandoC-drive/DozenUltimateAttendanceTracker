@@ -94,27 +94,34 @@
   </head>
 
   <body>
-    <header class="site-header">
-      <h1 style="margin: 0; font-size: 1.5rem; color: #0f172a;">Dozen Ultimate Attendance Dashboard</h1>
-      
-      <% if current_user %>
-        <nav class="nav-container">
-          <%= link_to "Dashboard", root_path, class: "btn-base btn-nav" %>
-          
-          <% if current_user.coach? %>
-            <%= link_to "Admin Settings", admin_attendances_path, class: "btn-base btn-nav" %>
-            <%= link_to "RecSports Sync", admin_recsports_path, class: "btn-base btn-nav" %>
-            <%= button_to "View as Player", toggle_coach_path, method: :delete, form_class: "inline-form", class: "btn-base btn-mode" %>
-          <% else %>
-            <%= form_with url: toggle_coach_path, method: :post, local: true, class: "pin-form inline-form" do |f| %>
-              <%= f.password_field :password, placeholder: "Coach PIN", class: "pin-input" %>
-              <%= f.submit "Enter", class: "pin-submit" %>
-            <% end %>
-          <% end %>
+    <header class="site-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 20px;">
+  
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <%= image_tag "DozenUltimateLogo.png", alt: "Dozen Ultimate Logo", style: "height: 55px; width: auto; object-fit: contain;" %>
+        <h1 style="margin: 0; font-size: 1.5rem; color: #0f172a;">Dozen Ultimate Attendance Tracker</h1>
+      </div>
 
-          <%= button_to "Sign out", session_path, method: :delete, data: { turbo: false }, form_class: "inline-form", class: "btn-base btn-danger" %>
-        </nav>
-      <% end %>
+      <div style="flex: 1; display: flex; justify-content: flex-end;">
+        <% if current_user %>
+          <nav class="nav-container" style="display: flex; gap: 10px; align-items: center;">
+            <%= link_to "Dashboard", root_path, class: "btn-base btn-nav" %>
+            
+            <% if current_user.coach? %>
+              <%= link_to "Admin Settings", admin_attendances_path, class: "btn-base btn-nav" %>
+              <%= link_to "RecSports Sync", admin_recsports_path, class: "btn-base btn-nav" %>
+              <%= button_to "View as Player", toggle_coach_path, method: :delete, form_class: "inline-form", class: "btn-base btn-mode" %>
+            <% else %>
+              <%= form_with url: toggle_coach_path, method: :post, local: true, class: "pin-form inline-form" do |f| %>
+                <%= f.password_field :password, placeholder: "Coach PIN", class: "pin-input" %>
+                <%= f.submit "Enter", class: "pin-submit" %>
+              <% end %>
+            <% end %>
+
+            <%= button_to "Sign out", session_path, method: :delete, data: { turbo: false }, form_class: "inline-form", class: "btn-base btn-danger" %>
+          </nav>
+        <% end %>
+      </div>
+
     </header>
 
     <% flash.each do |key, value| %>

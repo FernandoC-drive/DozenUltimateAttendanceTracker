@@ -234,62 +234,70 @@ th {
 
 
 /* attendance-specific visuals */
+/* Base fallback (Defaults to Standard Green) */
 .attendance-visualization {
   --heat-0-a: #f3f5f8;
   --heat-0-b: #e3e9f0;
   --heat-0-text: #1a1f2b;
-  --heat-1-bg: #0072b2;
-  --heat-1-text: #fff;
-  --heat-2-bg: #56b4e9;
+  
+  --heat-1-bg: #c8e6c9;
+  --heat-1-text: #1a1f2b;
+  --heat-2-bg: #81c784;
   --heat-2-text: #1a1f2b;
-  --heat-3-bg: #004f7d;
+  --heat-3-bg: #4caf50;
   --heat-3-text: #fff;
-  --progress-fill: #0072b2;
-  --status-present-bg: #dff1ff;
-  --status-present-text: #005f99;
-  --status-absent-bg: #fff1d5;
-  --status-absent-text: #8a5a00;
+  --heat-4-bg: #1b5e20;
+  --heat-4-text: #fff;
+  
+  --progress-fill: #4caf50;
+  --status-present-bg: #e6f4ea;
+  --status-present-text: #1b5e20;
+  --status-absent-bg: #fce8e6;
+  --status-absent-text: #c62828;
   --status-no-data-bg: #edf2f7;
   --status-no-data-text: #4a596d;
 }
 
+/* Standard (Default Green) */
 .attendance-visualization.palette-default {
-  --heat-1-bg: #2e8b57;
-  --heat-1-text: #fff;
-  --heat-2-bg: #90d4aa;
+  --heat-1-bg: #c8e6c9;
+  --heat-1-text: #1a1f2b;
+  --heat-2-bg: #81c784;
   --heat-2-text: #1a1f2b;
-  --heat-3-bg: #1f6f46;
+  --heat-3-bg: #4caf50;
   --heat-3-text: #fff;
-  --heat-4-bg: #0f4f2a;
+  --heat-4-bg: #1b5e20;
   --heat-4-text: #fff;
-  --progress-fill: #2e8b57;
-  --status-present-bg: #def5e8;
-  --status-present-text: #1f6f46;
-  --status-absent-bg: #fde8e8;
-  --status-absent-text: #a93226;
+  --progress-fill: #4caf50;
+  --status-present-bg: #e6f4ea;
+  --status-present-text: #1b5e20;
+  --status-absent-bg: #fce8e6;
+  --status-absent-text: #c62828;
 }
 
+/* Red-Green Friendly (Blues) */
 .attendance-visualization.palette-red_green_safe {
-  --heat-1-bg: #0072b2;
-  --heat-1-text: #fff;
-  --heat-2-bg: #56b4e9;
+  --heat-1-bg: #bbdefb;
+  --heat-1-text: #1a1f2b;
+  --heat-2-bg: #64b5f6;
   --heat-2-text: #1a1f2b;
-  --heat-3-bg: #004f7d;
+  --heat-3-bg: #1e88e5;
   --heat-3-text: #fff;
-  --heat-4-bg: #002b44;
+  --heat-4-bg: #0d47a1;
   --heat-4-text: #fff;
-  --progress-fill: #0072b2;
-  --status-present-bg: #dff1ff;
-  --status-present-text: #005f99;
-  --status-absent-bg: #fff1d5;
-  --status-absent-text: #8a5a00;
+  --progress-fill: #1e88e5;
+  --status-present-bg: #e8f0fe;
+  --status-present-text: #0d47a1;
+  --status-absent-bg: #fef0d9;
+  --status-absent-text: #b65f00;
 }
 
+/* Blue-Yellow Friendly (Tritanopia - Pinks) */
 .attendance-visualization.palette-tritanopia_safe {
   --heat-1-bg: #f8bbd0;
   --heat-1-text: #1a1f2b;
   --heat-2-bg: #f06292;
-  --heat-2-text: #fff;
+  --heat-2-text: #1a1f2b;
   --heat-3-bg: #e91e63;
   --heat-3-text: #fff;
   --heat-4-bg: #880e4f;
@@ -301,94 +309,21 @@ th {
   --status-absent-text: #c62828;
 }
 
+/* Monochrome (Grays) */
 .attendance-visualization.palette-monochrome {
-  --heat-0-a: #f0f0f0;
-  --heat-0-b: #d8d8d8;
-  --heat-0-text: #1f1f1f;
-  --heat-1-bg: #bdbdbd;
-  --heat-1-text: #111;
-  --heat-2-bg: #8e8e8e;
-  --heat-2-text: #fff;
-  --heat-3-bg: #4d4d4d;
+  --heat-1-bg: #e0e0e0;
+  --heat-1-text: #1a1f2b;
+  --heat-2-bg: #9e9e9e;
+  --heat-2-text: #1a1f2b;
+  --heat-3-bg: #616161;
   --heat-3-text: #fff;
-  --heat-4-bg: #2a2a2a;
+  --heat-4-bg: #212121;
   --heat-4-text: #fff;
-  --progress-fill: #4d4d4d;
+  --progress-fill: #616161;
   --status-present-bg: #e0e0e0;
-  --status-present-text: #222;
-  --status-absent-bg: #c8c8c8;
-  --status-absent-text: #111;
-  --status-no-data-bg: #f0f0f0;
-  --status-no-data-text: #333;
-}
-
-.attendance-visualization.palette-deuteranopia_safe {
-  --heat-1-bg: #8b2be2;
-  --heat-1-text: #fff;
-  --heat-2-bg: #dda0dd;
-  --heat-2-text: #1a1f2b;
-  --heat-3-bg: #4b0082;
-  --heat-3-text: #fff;
-  --heat-4-bg: #2f0050;
-  --heat-4-text: #fff;
-  --progress-fill: #8b2be2;
-  --status-present-bg: #f0e6ff;
-  --status-present-text: #4b0082;
-  --status-absent-bg: #fff8e1;
-  --status-absent-text: #8a5a00;
-}
-
-.attendance-visualization.palette-protanopia_safe {
-  --heat-1-bg: #008b8b;
-  --heat-1-text: #fff;
-  --heat-2-bg: #87ceeb;
-  --heat-2-text: #1a1f2b;
-  --heat-3-bg: #006666;
-  --heat-3-text: #fff;
-  --heat-4-bg: #004f4f;
-  --heat-4-text: #fff;
-  --progress-fill: #008b8b;
-  --status-present-bg: #e0f7f7;
-  --status-present-text: #006666;
-  --status-absent-bg: #fff4e5;
-  --status-absent-text: #8a5a00;
-}
-
-.attendance-visualization.palette-high_contrast {
-  --heat-1-bg: #ff6b35;
-  --heat-1-text: #000;
-  --heat-2-bg: #f7931e;
-  --heat-2-text: #000;
-  --heat-3-bg: #d00000;
-  --heat-3-text: #fff;
-  --heat-4-bg: #a00000;
-  --heat-4-text: #fff;
-  --progress-fill: #d00000;
-  --status-present-bg: #000;
-  --status-present-text: #fff;
-  --status-absent-bg: #fff;
-  --status-absent-text: #000;
-}
-
-.attendance-visualization.palette-dark_theme {
-  --heat-0-a: #2a2a2a;
-  --heat-0-b: #1a1a1a;
-  --heat-0-text: #e0e0e0;
-  --heat-1-bg: #4a90e2;
-  --heat-1-text: #fff;
-  --heat-2-bg: #7bb3f0;
-  --heat-2-text: #1a1a1a;
-  --heat-3-bg: #1e5f99;
-  --heat-3-text: #fff;
-  --heat-4-bg: #143d60;
-  --heat-4-text: #fff;
-  --progress-fill: #4a90e2;
-  --status-present-bg: #2a4a3a;
-  --status-present-text: #90d4aa;
-  --status-absent-bg: #4a2a2a;
-  --status-absent-text: #ff9999;
-  --status-no-data-bg: #2a2a2a;
-  --status-no-data-text: #888;
+  --status-present-text: #212121;
+  --status-absent-bg: #f5f5f5;
+  --status-absent-text: #424242;
 }
 
 .attendance-summary {
